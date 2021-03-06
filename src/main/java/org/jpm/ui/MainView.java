@@ -1,34 +1,27 @@
 package org.jpm.ui;
 
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.login.LoginI18n;
-import com.vaadin.flow.component.login.LoginOverlay;
-import com.vaadin.flow.component.page.Page;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.jpm.ui.data.FormDetails;
-import org.jpm.ui.data.FormDetailsService;
-import org.jpm.ui.data.FormDetailsService.ServiceException;
-import org.jpm.ui.components.PictureField;
-
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.login.LoginI18n;
+import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.Route;
-
-import java.awt.*;
-import java.util.Timer;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import org.jpm.ui.components.PictureField;
+import org.jpm.ui.data.FormDetails;
+import org.jpm.ui.data.FormDetailsService;
+import org.jpm.ui.data.FormDetailsService.ServiceException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
 @Route("")
@@ -47,6 +40,11 @@ public class MainView extends VerticalLayout {
 
         H2 title = new H2("Prep 6 Questions for the Leavers Book");
 
+        // common componets
+        Label spacing = new Label("");
+
+
+        // form
         TextField firstnameField = new TextField("First name");
         TextField lastnameField = new TextField("Last name");
 
@@ -59,7 +57,6 @@ public class MainView extends VerticalLayout {
         houseComboBox.setPlaceholder("select your house");
 
         TextField prefectRoleField = new TextField("Prefect Role");
-
         TextField bestMemoryField = new TextField("Best Memory");
         TextField missAboutPrepField = new TextField("What I will miss about Prep");
         TextField lookingForwardToField = new TextField("What I'm looking forward to at Senior School");
@@ -69,51 +66,21 @@ public class MainView extends VerticalLayout {
         TextField likeWhenOlderField = new TextField("What would you like to do when older?");
         TextField favOuterSchoolField = new TextField("Favourite this to do out of school?");
 
-        // This is a custom field we create to handle the field 'avatar' in our data. It
-        // work just as any other field, e.g. the TextFields above. Instead of a String
-        // value, it has an AvatarImage value.
         PictureField startPrepPictureField = new PictureField("Select start of Prep image");
         PictureField endOfPrepPictureField = new PictureField("Select end of Prep image");
 
         Button submitButton = new Button("Save my responses");
         submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        //Span errorMessage = new Span();
 
-        /*
-         * Build the visible layout
-         */
-
-        // Create a FormLayout with all our components. The FormLayout doesn't have any
-        // logic (validation, etc.), but it allows us to configure Responsiveness from
-        // Java code and its defaults looks nicer than just using a VerticalLayout.
-        FormLayout formLayout = new FormLayout(title, firstnameField, lastnameField, formComboBox,houseComboBox, prefectRoleField, bestMemoryField,missAboutPrepField,
-                lookingForwardToField, proudestMomentField, favSubjectField, faveGameField, likeWhenOlderField, favOuterSchoolField, startPrepPictureField, endOfPrepPictureField, submitButton);
+        FormLayout formLayout = new FormLayout(title, firstnameField, lastnameField, formComboBox,houseComboBox, prefectRoleField,
+                bestMemoryField,missAboutPrepField, lookingForwardToField, proudestMomentField, favSubjectField, faveGameField,
+                likeWhenOlderField, favOuterSchoolField, startPrepPictureField, endOfPrepPictureField, spacing, submitButton);
 
         // dont show it yet
-        formLayout.setVisible(false);
-
-
-        Button doneButton = new Button("Complete");
-        doneButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        doneButton.addClickListener(e -> {
-            done();
-        });
-        FormLayout formLayout2 = new FormLayout(doneButton);
-        formLayout2.setVisible(false);
-        formLayout2.setMaxWidth("900px");
-        formLayout2.getStyle().set("margin", "0 auto");
-        formLayout2.setColspan(doneButton, 2);
-
-
-
-
-        // Restrict maximum width and center on page
         formLayout.setMaxWidth("900px");
         formLayout.getStyle().set("margin", "0 auto");
-
-        // Allow the form layout to be responsive. On device widths 0-490px we have one
-        // column, then we have two. Field labels are always on top of the fields.
+        formLayout.setVisible(false);
         formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP),
                 new FormLayout.ResponsiveStep("490px", 2, FormLayout.ResponsiveStep.LabelsPosition.TOP));
 
@@ -129,16 +96,33 @@ public class MainView extends VerticalLayout {
         formLayout.setColspan(likeWhenOlderField, 2);
         formLayout.setColspan(favOuterSchoolField, 2);
 
-        //formLayout.setColspan(startPrepPictureField, 2);
-        //formLayout.setColspan(endOfPrepPictureField, 2);
-
-        //.setColspan(errorMessage, 2);
+        formLayout.setColspan(spacing, 2);
         formLayout.setColspan(submitButton, 2);
 
 
-        // Add some styles to the error message to make it pop out
-        //errorMessage.getStyle().set("color", "var(--lumo-error-text-color)");
-       // errorMessage.getStyle().set("padding", "15px 0");
+
+        // saving
+        ProgressBar progressBar = new ProgressBar(0,10);
+        progressBar.setValue(0);
+
+        Button doneButton = new Button("Complete");
+        doneButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        doneButton.addClickListener(e -> {
+            done();
+        });
+        FormLayout doneLayout = new FormLayout(spacing,spacing, progressBar, doneButton);
+
+        doneLayout.setVisible(false);
+        doneLayout.setMaxWidth("900px");
+        doneLayout.getStyle().set("margin", "0 auto");
+        doneLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("490px", 2, FormLayout.ResponsiveStep.LabelsPosition.TOP));
+
+        doneLayout.setColspan(spacing, 2);
+        doneLayout.setColspan(progressBar, 2);
+        doneLayout.setColspan(doneButton, 2);
+
+
 
 
         // login
@@ -159,7 +143,8 @@ public class MainView extends VerticalLayout {
         // Add the form to the page
         add(loginComponent);
         add(formLayout);
-        add(formLayout2);
+        add(doneLayout);
+
 
         /*
          * Set up form functionality
@@ -181,6 +166,7 @@ public class MainView extends VerticalLayout {
         binder.forField(formComboBox).asRequired().bind("form");
         binder.forField(houseComboBox).asRequired().bind("house");
 
+        // not required
         binder.forField(prefectRoleField).bind("prefectRole");
 
         binder.forField(bestMemoryField).asRequired().bind("bestMemory");
@@ -195,38 +181,52 @@ public class MainView extends VerticalLayout {
         binder.forField(endOfPrepPictureField).asRequired().bind("endOfPrepPicture");
 
 
-        // A label where bean-level error messages go
-        //binder.setStatusLabel(errorMessage);
-
-        // And finally the submit button
+        // submit button listener
         submitButton.addClickListener(e -> {
             try {
+
+                formLayout.setVisible(false);
+                doneButton.setEnabled(false);
+                doneLayout.setVisible(true);
+
                 // Create empty bean to store the details into
                 FormDetails detailsBean = new FormDetails();
+                progressBar.setValue(progressBar.getMax() * 0.3);
+
+                Thread.sleep(1000);
 
                 // Run validators and write the values to the bean
                 binder.writeBean(detailsBean);
+                progressBar.setValue(progressBar.getMax() * 0.6);
+
+                Thread.sleep(1000);
 
                 // Call backend to store the data
                 service.store(detailsBean);
+                progressBar.setValue(progressBar.getMax() * 0.9);
+
+                Thread.sleep(1000);
 
                 // Show success message if everything went well
-
-
-                formLayout.setVisible(false);
                 showSuccess(detailsBean);
-                formLayout2.setVisible(true);
-
+                progressBar.setMax(progressBar.getMax());
+                doneButton.setEnabled(true);
 
 
             } catch (ValidationException e1) {
+
+                doneLayout.setVisible(false);
+                formLayout.setVisible(true);
                 showError("Please complete all the required fields, including uploading the photos");
 
             } catch (ServiceException e2) {
 
-                e2.printStackTrace();
+                //e2.printStackTrace();
+                doneLayout.setVisible(false);
+                formLayout.setVisible(true);
                 showError("Failed to save the responses, please retry or contact Louise");
-                //errorMessage.setText("Saving the data failed, please try again");
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
             }
         });
 
@@ -250,14 +250,14 @@ public class MainView extends VerticalLayout {
      */
     private void showSuccess(FormDetails detailsBean) {
         Notification notification = Notification.show("Data saved, thanks for providing the data for " + detailsBean.getFirstname() + " " + detailsBean.getLastname());
-        notification.setDuration(3000);
+        notification.setDuration(5000);
+        notification.setPosition(Notification.Position.TOP_START);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
     }
 
     private void showError(String message) {
-        Notification notification = Notification.show(message);
-        notification.setDuration(5000);
+        Notification notification = Notification.show(message, 5000, Notification.Position.TOP_START);
         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
     }
 

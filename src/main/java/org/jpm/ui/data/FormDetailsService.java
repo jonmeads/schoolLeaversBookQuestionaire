@@ -1,30 +1,39 @@
 package org.jpm.ui.data;
 
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
+import org.springframework.stereotype.Service;
+import org.springframework.util.concurrent.ListenableFuture;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-
-import org.springframework.stereotype.Service;
 
 @Service
 public class FormDetailsService implements Serializable {
 
     private String previousHandle;
 
-    /**
-     * 'Stores' the bean.
-     * <p>
-     * In reality it just throws ServiceException from time to time.
-     */
-    public void store(FormDetails formDetails) throws ServiceException {
 
+    @Async
+    public ListenableFuture<Void> store(FormDetails formDetails) throws ServiceException {
+
+        // TODO save all this
         // Here you can store the object into the DB, call REST services, etc.
+        try {
+            Thread.sleep(5000);
+
+        } catch (InterruptedException e) {
+            return AsyncResult.forExecutionException(new RuntimeException("Error"));
+        }
 
         // for demo purposes, always fail first try
         if (previousHandle == null || !previousHandle.equals(formDetails.getFirstname())) {
             previousHandle = formDetails.getFirstname();
             throw new ServiceException("This exception simulates an error in the backend, and is intentional. Please try to submit the form again.");
         }
+
+        return AsyncResult.forValue(null);
     }
 
     /**

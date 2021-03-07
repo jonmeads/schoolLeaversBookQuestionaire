@@ -12,7 +12,9 @@ import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.progressbar.ProgressBarVariant;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
@@ -21,108 +23,52 @@ import org.jpm.ui.components.PictureField;
 import org.jpm.ui.data.FormDetails;
 import org.jpm.ui.data.FormDetailsService;
 import org.jpm.ui.data.FormDetailsService.ServiceException;
+import org.jpm.ui.data.FormQuestion;
+import org.jpm.ui.data.LongRunningService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 
 
 @Route("")
+@Push
 public class MainView extends VerticalLayout {
 
+    private static final String MIN_WITH = "490px";
+    private static final String MAX_WITH = "900px";
+    private static final String MIN_BUTTON_WIDTH = "100px";
+
     private FormDetailsService service;
+    private LongRunningService longRunningService;
     private BeanValidationBinder<FormDetails> binder;
 
-    public MainView(@Autowired FormDetailsService service) {
+
+    public MainView(@Autowired FormDetailsService service, @Autowired LongRunningService longRunningService) {
 
         this.service = service;
-
-        /*
-         * Main Questionaire form
-         */
-
-        H2 title = new H2("Prep 6 Questions for the Leavers Book");
-
-        // common componets
-        Label spacing = new Label("");
-
+        this.longRunningService = longRunningService;
+        binder = new BeanValidationBinder<>(FormDetails.class);
 
         // form
-        TextField firstnameField = new TextField("First name");
-        TextField lastnameField = new TextField("Last name");
-
-        ComboBox<String> formComboBox = new ComboBox<>();
-        formComboBox.setItems("Swords", "Kells", "Derry");
-        formComboBox.setPlaceholder("select your form");
-
-        ComboBox<String> houseComboBox = new ComboBox<>();
-        houseComboBox.setItems("Fisher", "More", "Alban", "Becket");
-        houseComboBox.setPlaceholder("select your house");
-
-        TextField prefectRoleField = new TextField("Prefect Role");
-        TextField bestMemoryField = new TextField("Best Memory");
-        TextField missAboutPrepField = new TextField("What I will miss about Prep");
-        TextField lookingForwardToField = new TextField("What I'm looking forward to at Senior School");
-        TextField proudestMomentField = new TextField("My Proudest Moment");
-        TextField favSubjectField = new TextField("Favourite subject");
-        TextField faveGameField = new TextField("Favourite Game/Craze/Movie");
-        TextField likeWhenOlderField = new TextField("What would you like to do when older?");
-        TextField favOuterSchoolField = new TextField("Favourite this to do out of school?");
-
-        PictureField startPrepPictureField = new PictureField("Select start of Prep image");
-        PictureField endOfPrepPictureField = new PictureField("Select end of Prep image");
-
-        Button submitButton = new Button("Save my responses");
-        submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button formSubmitButton = new Button("Save");
+        Button formCancel = new Button("Cancel");
+        VerticalLayout formLayout = createForm(binder, formSubmitButton, formCancel);
 
 
-        FormLayout formLayout = new FormLayout(title, firstnameField, lastnameField, formComboBox,houseComboBox, prefectRoleField,
-                bestMemoryField,missAboutPrepField, lookingForwardToField, proudestMomentField, favSubjectField, faveGameField,
-                likeWhenOlderField, favOuterSchoolField, startPrepPictureField, endOfPrepPictureField, spacing, submitButton);
+        // menu
+        Button formButton = new Button("Fill in Questionnaire");
+        Button babyButton = new Button("Provide Baby Photo");
+        Button quitButton = new Button("Finished");
+        VerticalLayout menuLayout = createMenu(formButton,babyButton, quitButton);
 
-        // dont show it yet
-        formLayout.setMaxWidth("900px");
-        formLayout.getStyle().set("margin", "0 auto");
-        formLayout.setVisible(false);
-        formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP),
-                new FormLayout.ResponsiveStep("490px", 2, FormLayout.ResponsiveStep.LabelsPosition.TOP));
-
-        // These components take full width regardless if we use one column or two (it
-        // just looks better that way)
-        formLayout.setColspan(title, 2);
-        formLayout.setColspan(bestMemoryField, 2);
-        formLayout.setColspan(missAboutPrepField, 2);
-        formLayout.setColspan(lookingForwardToField, 2);
-        formLayout.setColspan(proudestMomentField, 2);
-        formLayout.setColspan(favSubjectField, 2);
-        formLayout.setColspan(faveGameField, 2);
-        formLayout.setColspan(likeWhenOlderField, 2);
-        formLayout.setColspan(favOuterSchoolField, 2);
-
-        formLayout.setColspan(spacing, 2);
-        formLayout.setColspan(submitButton, 2);
+        // baby
+        Button babySaveButton = new Button("Save");
+        Button babyCancel = new Button("Cancel");
+        VerticalLayout babyLayout = createBaby(babySaveButton, babyCancel);
 
 
-
-        // saving
+        // save
         ProgressBar progressBar = new ProgressBar(0,10);
-        progressBar.setValue(0);
-
-        Button doneButton = new Button("Complete");
-        doneButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        doneButton.addClickListener(e -> {
-            done();
-        });
-        FormLayout doneLayout = new FormLayout(spacing,spacing, progressBar, doneButton);
-
-        doneLayout.setVisible(false);
-        doneLayout.setMaxWidth("900px");
-        doneLayout.getStyle().set("margin", "0 auto");
-        doneLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP),
-                new FormLayout.ResponsiveStep("490px", 2, FormLayout.ResponsiveStep.LabelsPosition.TOP));
-
-        doneLayout.setColspan(spacing, 2);
-        doneLayout.setColspan(progressBar, 2);
-        doneLayout.setColspan(doneButton, 2);
-
-
+        VerticalLayout saveFormLayout = createFormSave(progressBar);
 
 
         // login
@@ -130,7 +76,7 @@ public class MainView extends VerticalLayout {
         loginComponent.addLoginListener(e -> {
             if("bob".equals(e.getPassword()) && "bob".equals(e.getUsername())) {
                 loginComponent.close();
-                formLayout.setVisible(true);
+                menuLayout.setVisible(true);
             } else {
                 loginComponent.setError(true);
                 loginComponent.setEnabled(true);
@@ -140,98 +86,130 @@ public class MainView extends VerticalLayout {
         loginComponent.setOpened(true);
 
 
-        // Add the form to the page
+        // Add the layouts to the page
         add(loginComponent);
+        add(menuLayout);
         add(formLayout);
-        add(doneLayout);
+        add(babyLayout);
+        add(saveFormLayout);
 
 
-        /*
-         * Set up form functionality
-         */
+        // listeners
+        formButton.addClickListener(e -> {
+            menuLayout.setVisible(false);
+            formLayout.setVisible(true);
+        });
 
-        /*
-         * Binder is a form utility class provided by Vaadin. Here, we use a specialized
-         * version to gain access to automatic Bean Validation (JSR-303). We provide our
-         * data class so that the Binder can read the validation definitions on that
-         * class and create appropriate validators. The BeanValidationBinder can
-         * automatically validate all JSR-303 definitions, meaning we can concentrate on
-         * custom things such as the passwords in this class.
-         */
-        binder = new BeanValidationBinder<FormDetails>(FormDetails.class);
+        babyButton.addClickListener(e -> {
+            menuLayout.setVisible(false);
+            babyLayout.setVisible(true);
+        });
 
-        // Basic name fields that are required to fill in
-        binder.forField(firstnameField).asRequired().bind("firstname");
-        binder.forField(lastnameField).asRequired().bind("lastname");
-        binder.forField(formComboBox).asRequired().bind("form");
-        binder.forField(houseComboBox).asRequired().bind("house");
+        quitButton.addClickListener(e -> done());
 
-        // not required
-        binder.forField(prefectRoleField).bind("prefectRole");
+        babyCancel.addClickListener(e -> {
+            babyLayout.setVisible(false);
+            menuLayout.setVisible(true);
+        });
 
-        binder.forField(bestMemoryField).asRequired().bind("bestMemory");
-        binder.forField(missAboutPrepField).asRequired().bind("missAboutPrep");
-        binder.forField(lookingForwardToField).asRequired().bind("lookingForwardTo");
-        binder.forField(proudestMomentField).asRequired().bind("proudestMoment");
-        binder.forField(favSubjectField).asRequired().bind("favSubject");
-        binder.forField(faveGameField).asRequired().bind("faveGame");
-        binder.forField(likeWhenOlderField).asRequired().bind("likeWhenOlder");
-        binder.forField(favOuterSchoolField).asRequired().bind("favOuterSchool");
-        binder.forField(startPrepPictureField).asRequired().bind("startPrepPicture");
-        binder.forField(endOfPrepPictureField).asRequired().bind("endOfPrepPicture");
+        formCancel.addClickListener(e -> {
+            formLayout.setVisible(false);
+            menuLayout.setVisible(true);
+        });
 
+        babySaveButton.addClickListener(e -> {
+            babyLayout.setVisible(false);
+            saveFormLayout.setVisible(true);
+            UI ui = UI.getCurrent();
 
-        // submit button listener
-        submitButton.addClickListener(e -> {
+            longRunningService
+                    .longRunningTask()
+                    .addCallback(new ListenableFutureCallback<>() {
+
+                @Override
+                public void onSuccess(Void unused) {
+                    ui.access(
+                            () -> {
+                                saveFormLayout.setVisible(false);
+                                menuLayout.setVisible(true);
+                                showSuccess("Baby data saved");
+                            }
+                    );
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+                    ui.access(
+                            () -> {
+                                saveFormLayout.setVisible(false);
+                                babyLayout.setVisible(true);
+                                showError("Failed to save the responses, please retry or contact Louise");
+                            }
+                    );
+                }
+            });
+        });
+
+        formSubmitButton.addClickListener(e -> {
+            UI ui = UI.getCurrent();
+            formLayout.setVisible(false);
+            saveFormLayout.setVisible(true);
+
             try {
-
-                formLayout.setVisible(false);
-                doneButton.setEnabled(false);
-                doneLayout.setVisible(true);
-
-                // Create empty bean to store the details into
                 FormDetails detailsBean = new FormDetails();
-                progressBar.setValue(progressBar.getMax() * 0.3);
-
-                Thread.sleep(1000);
-
-                // Run validators and write the values to the bean
                 binder.writeBean(detailsBean);
-                progressBar.setValue(progressBar.getMax() * 0.6);
+                service.store(detailsBean).addCallback(new ListenableFutureCallback<>() {
 
-                Thread.sleep(1000);
+                            @Override
+                            public void onSuccess(Void unused) {
+                                ui.access(() -> {
+                                            saveFormLayout.setVisible(false);
+                                            menuLayout.setVisible(true);
+                                            showSuccess(detailsBean);
+                                        }
+                                );
+                            }
 
-                // Call backend to store the data
-                service.store(detailsBean);
-                progressBar.setValue(progressBar.getMax() * 0.9);
+                            @Override
+                            public void onFailure(Throwable throwable) {
+                                ui.access(() -> {
+                                            saveFormLayout.setVisible(false);
+                                            formLayout.setVisible(true);
+                                            showError("Failed to save the responses, please retry or contact Louise");
+                                        }
+                                );
+                            }
+                        });
 
-                Thread.sleep(1000);
-
-                // Show success message if everything went well
-                showSuccess(detailsBean);
-                progressBar.setMax(progressBar.getMax());
-                doneButton.setEnabled(true);
-
-
-            } catch (ValidationException e1) {
-
-                doneLayout.setVisible(false);
-                formLayout.setVisible(true);
-                showError("Please complete all the required fields, including uploading the photos");
-
-            } catch (ServiceException e2) {
-
-                //e2.printStackTrace();
-                doneLayout.setVisible(false);
+            } catch (ValidationException | ServiceException formException) {
+                saveFormLayout.setVisible(false);
                 formLayout.setVisible(true);
                 showError("Failed to save the responses, please retry or contact Louise");
-            } catch (InterruptedException interruptedException) {
-                interruptedException.printStackTrace();
             }
+
         });
 
     }
 
+
+    private VerticalLayout createFormSave(ProgressBar progressBar) {
+
+        VerticalLayout savingLayout = new VerticalLayout();
+        savingLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        savingLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+
+        H2 title = new H2("Saving data, please wait...");
+
+        progressBar.addThemeVariants(ProgressBarVariant.LUMO_CONTRAST);
+        progressBar.setMaxWidth(MIN_WITH);
+        progressBar.setIndeterminate(true);
+
+        savingLayout.add(title);
+        savingLayout.add(progressBar);
+
+        savingLayout.setVisible(false);
+        return savingLayout;
+    }
 
     private LoginOverlay getLoginOverlay() {
         LoginOverlay loginComponent = new LoginOverlay();
@@ -256,6 +234,14 @@ public class MainView extends VerticalLayout {
 
     }
 
+    private void showSuccess(String message) {
+        Notification notification = Notification.show(message);
+        notification.setDuration(5000);
+        notification.setPosition(Notification.Position.TOP_START);
+        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+    }
+
     private void showError(String message) {
         Notification notification = Notification.show(message, 5000, Notification.Position.TOP_START);
         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -266,5 +252,150 @@ public class MainView extends VerticalLayout {
     }
 
 
+    private VerticalLayout createBaby(Button babySaveButton, Button cancel) {
+        VerticalLayout babyVerticalLayout = new VerticalLayout();
+        babyVerticalLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        babyVerticalLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+
+        H2 title = new H2("Baby Photo");
+
+        TextField firstnameField = new TextField("First name");
+        TextField lastnameField = new TextField("Last name");
+        PictureField babyPicture = new PictureField("Select baby photo");
+
+        FormLayout formLayout = new FormLayout(firstnameField, lastnameField, babyPicture);
+        assignFormLayoutSettings(formLayout, true);
+
+        formLayout.setColspan(babyPicture, 2);
+
+        babyVerticalLayout.add(title);
+        babyVerticalLayout.add(formLayout);
+        babyVerticalLayout.add(babySaveButton);
+
+        babySaveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        FormLayout buttonLayout = new FormLayout(babySaveButton, cancel);
+        assignFormLayoutSettings(buttonLayout, true);
+        buttonLayout.setColspan(babySaveButton, 2);
+        buttonLayout.setColspan(cancel, 2);
+        cancel.setMinWidth(MIN_BUTTON_WIDTH);
+        babySaveButton.setMinWidth(MIN_BUTTON_WIDTH);
+
+        babyVerticalLayout.add(buttonLayout);
+
+        babyVerticalLayout.setVisible(false);
+        return babyVerticalLayout;
+    }
+
+    private VerticalLayout createMenu(Button formButton, Button babyButton, Button quitButton) {
+        VerticalLayout menuVerticalLayout = new VerticalLayout();
+        menuVerticalLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        menuVerticalLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+
+        H2 title = new H2("Prep 6 Leavers Menu");
+
+        formButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        babyButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        quitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        FormLayout formLayout = new FormLayout(formButton, babyButton, quitButton);
+        assignFormLayoutSettings(formLayout, true);
+
+        formLayout.setColspan(formButton, 2);
+        formLayout.setColspan(babyButton, 2);
+        formLayout.setColspan(quitButton, 2);
+
+        menuVerticalLayout.add(title);
+        menuVerticalLayout.add(formLayout);
+
+        menuVerticalLayout.setVisible(false);
+        return menuVerticalLayout;
+
+    }
+
+
+    private VerticalLayout createForm(BeanValidationBinder<FormDetails> binder, Button submitButton, Button cancel) {
+
+        VerticalLayout formVerticalLayout = new VerticalLayout();
+        formVerticalLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        formVerticalLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+
+        // main fields
+        H2 title = new H2("Leavers Book Questionnaire");
+
+        TextField firstnameField = new TextField("First name");
+        TextField lastnameField = new TextField("Last name");
+
+        ComboBox<String> formComboBox = new ComboBox<>();
+        formComboBox.setItems("Swords", "Kells", "Derry");
+        formComboBox.setPlaceholder("select your form");
+
+        ComboBox<String> houseComboBox = new ComboBox<>();
+        houseComboBox.setItems("Fisher", "More", "Alban", "Becket");
+        houseComboBox.setPlaceholder("select your house");
+
+        TextField prefectRoleField = new TextField("Prefect Role");
+
+        binder.forField(firstnameField).asRequired().bind("firstname");
+        binder.forField(lastnameField).asRequired().bind("lastname");
+        binder.forField(formComboBox).asRequired().bind("form");
+        binder.forField(houseComboBox).asRequired().bind("house");
+        binder.forField(prefectRoleField).bind("prefectRole"); // not required
+
+        FormLayout formLayout = new FormLayout(firstnameField, lastnameField, formComboBox,houseComboBox, prefectRoleField);
+        assignFormLayoutSettings(formLayout, false);
+
+        for(FormQuestion question : FormQuestion.values()) {
+            TextField field = new TextField(question.getDescription());
+            formLayout.add(field);
+            formLayout.setColspan(field, 2);
+            binder.forField(field).asRequired().bind(question.getPojoField());
+        }
+
+        PictureField startPrepPictureField = new PictureField("Select start of Prep image");
+        PictureField endOfPrepPictureField = new PictureField("Select end of Prep image");
+
+        formLayout.setColspan(startPrepPictureField, 2);
+        formLayout.setColspan(endOfPrepPictureField, 2);
+
+        binder.forField(startPrepPictureField).asRequired().bind("startPrepPicture");
+        binder.forField(endOfPrepPictureField).asRequired().bind("endOfPrepPicture");
+
+        formLayout.add(startPrepPictureField);
+        formLayout.add(endOfPrepPictureField);
+        formLayout.add(new Label("")); // spacing
+
+        formVerticalLayout.add(title);
+        formVerticalLayout.add(formLayout);
+
+        submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        submitButton.setMinWidth(MIN_BUTTON_WIDTH);
+        cancel.setMinWidth(MIN_BUTTON_WIDTH);
+        FormLayout buttonLayout = new FormLayout(submitButton, cancel);
+        assignFormLayoutSettings(buttonLayout, false);
+        buttonLayout.setColspan(submitButton, 2);
+        buttonLayout.setColspan(cancel, 2);
+
+        formVerticalLayout.add(buttonLayout);
+
+        formVerticalLayout.setVisible(false);
+
+        return formVerticalLayout;
+    }
+
+    private void assignFormLayoutSettings(FormLayout layout, boolean limtSteps) {
+        layout.setMaxWidth(MAX_WITH);
+        layout.getStyle().set("margin", "0 auto");
+        if(limtSteps) {
+            layout.setResponsiveSteps(
+                    new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                    new FormLayout.ResponsiveStep(MIN_WITH, 2, FormLayout.ResponsiveStep.LabelsPosition.TOP));
+        } else {
+            layout.setResponsiveSteps(
+                    new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                    new FormLayout.ResponsiveStep(MIN_WITH, 2, FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                    new FormLayout.ResponsiveStep(MAX_WITH, 4, FormLayout.ResponsiveStep.LabelsPosition.TOP));
+        }
+    }
 
 }

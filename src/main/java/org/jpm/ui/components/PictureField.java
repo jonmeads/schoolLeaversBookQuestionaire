@@ -1,11 +1,5 @@
 package org.jpm.ui.components;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-
-import org.jpm.ui.data.PictureImage;
-
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
@@ -13,6 +7,11 @@ import com.vaadin.flow.component.upload.SucceededEvent;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.server.StreamResource;
+import org.jpm.ui.data.PictureImage;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 
 /**
  * A custom Vaadin component that allows users to upload an avatar image.
@@ -32,7 +31,7 @@ public class PictureField extends CustomField<PictureImage> {
      */
     private ByteArrayOutputStream outputStream;
 
-    private Image currentAvatar;
+    private Image currentImage;
     private Upload upload;
 
     public PictureField(String caption) {
@@ -43,11 +42,11 @@ public class PictureField extends CustomField<PictureImage> {
     public PictureField() {
 
         // <img> that shows the current avatar
-        currentAvatar = new Image();
-        currentAvatar.setAlt("picture image");
-        currentAvatar.setMaxHeight("100px");
-        currentAvatar.getStyle().set("margin-right", "15px");
-        currentAvatar.setVisible(false); // see updateImage()
+        currentImage = new Image();
+        currentImage.setAlt("picture image");
+        currentImage.setMaxHeight("100px");
+        currentImage.getStyle().set("margin-right", "15px");
+        currentImage.setVisible(false); // see updateImage()
 
         // create the upload component and delegate actions to the receiveUpload method
         upload = new Upload(this::receiveUpload);
@@ -70,7 +69,7 @@ public class PictureField extends CustomField<PictureImage> {
 
         // component layouting
         Div wrapper = new Div();
-        wrapper.add(currentAvatar, upload);
+        wrapper.add(currentImage, upload);
         wrapper.getStyle().set("display", "flex");
         add(wrapper);
     }
@@ -149,11 +148,11 @@ public class PictureField extends CustomField<PictureImage> {
      */
     private void updateImage() {
         if (value != null && value.getImage() != null) {
-            currentAvatar.setSrc(new StreamResource("picture", () -> new ByteArrayInputStream(value.getImage())));
-            currentAvatar.setVisible(true);
+            currentImage.setSrc(new StreamResource("picture", () -> new ByteArrayInputStream(value.getImage())));
+            currentImage.setVisible(true);
         } else {
-            currentAvatar.setSrc("");
-            currentAvatar.setVisible(false);
+            currentImage.setSrc("");
+            currentImage.setVisible(false);
         }
     }
 }

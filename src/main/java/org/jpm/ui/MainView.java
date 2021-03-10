@@ -1,6 +1,7 @@
 package org.jpm.ui;
 
-import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -8,12 +9,12 @@ import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.component.progressbar.ProgressBar;
@@ -22,24 +23,18 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
-import com.vaadin.flow.internal.MessageDigestUtil;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
-import org.apache.commons.io.IOUtils;
+import org.jpm.config.AppConstants;
+import org.jpm.exceptions.ServiceException;
+import org.jpm.models.BabyDetails;
+import org.jpm.models.FormDetails;
+import org.jpm.models.FormQuestion;
+import org.jpm.services.BabyFormDetailsService;
+import org.jpm.services.FormDetailsService;
 import org.jpm.ui.components.PictureField;
-import org.jpm.ui.data.*;
-import org.jpm.ui.data.FormDetailsService.ServiceException;
+import org.jpm.ui.data.MultiFileBufferToFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.concurrent.ListenableFutureCallback;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
 
 
 @JsModule("./js/theme-selector.js")
@@ -47,25 +42,33 @@ import java.util.Iterator;
 @Push
 public class MainView extends VerticalLayout {
 
-    private static final String MIN_WITH = "490px";
-    private static final String MAX_WITH = "900px";
+    private static final String MIN_WIDTH = "490px";
+    private static final String MAX_WIDTH = "900px";
     private static final String MIN_BUTTON_WIDTH = "100px";
 
+
     private FormDetailsService formDetailsService;
-    private LongRunningService longRunningService;
-    private BeanValidationBinder<FormDetails> binder;
+    private BabyFormDetailsService babyFormDetailsService;
+    private BeanValidationBinder<FormDetails> formDetailsBeanValidationBinder;
+    private BeanValidationBinder<BabyDetails> babyDetailsBeanValidationBinder;
 
 
-    public MainView(@Autowired FormDetailsService formDetailsService, @Autowired LongRunningService longRunningService) {
+    public MainView(@Autowired FormDetailsService formDetailsService, @Autowired BabyFormDetailsService babyFormDetailsService) {
 
         this.formDetailsService = formDetailsService;
-        this.longRunningService = longRunningService;
-        binder = new BeanValidationBinder<>(FormDetails.class);
+        this.babyFormDetailsService = babyFormDetailsService;
+        formDetailsBeanValidationBinder = new BeanValidationBinder<>(FormDetails.class);
+        babyDetailsBeanValidationBinder = new BeanValidationBinder<>(BabyDetails.class);
 
+        constructUI();
+    }
+
+
+    protected void constructUI() {
         // form
         Button formSubmitButton = new Button("Save");
         Button formCancel = new Button("Cancel");
-        VerticalLayout formLayout = createForm(binder, formSubmitButton, formCancel);
+        VerticalLayout formLayout = createForm(formDetailsBeanValidationBinder, formSubmitButton, formCancel);
 
 
         // menu
@@ -78,7 +81,7 @@ public class MainView extends VerticalLayout {
         // baby
         Button babySaveButton = new Button("Save");
         Button babyCancel = new Button("Cancel");
-        VerticalLayout babyLayout = createBaby(babySaveButton, babyCancel);
+        VerticalLayout babyLayout = createBaby(babyDetailsBeanValidationBinder, babySaveButton, babyCancel);
 
         // photos
         Button photoCancel = new Button("Finished");
@@ -92,7 +95,7 @@ public class MainView extends VerticalLayout {
         // login
         LoginOverlay loginComponent = getLoginOverlay();
         loginComponent.addLoginListener(e -> {
-            if("bob".equals(e.getPassword()) && "bob".equals(e.getUsername())) {
+            if(AppConstants.AUTH_PASS.equals(e.getPassword()) && AppConstants.AUTH_USER.equals(e.getUsername())) {
                 loginComponent.close();
                 menuLayout.setVisible(true);
             } else {
@@ -151,32 +154,42 @@ public class MainView extends VerticalLayout {
             saveFormLayout.setVisible(true);
             UI ui = UI.getCurrent();
 
-            longRunningService
-                    .longRunningTask()
+            try {
+
+                BabyDetails detailsBean = new BabyDetails();
+                babyDetailsBeanValidationBinder.writeBean(detailsBean);
+
+                babyFormDetailsService
+                    .store(detailsBean)
                     .addCallback(new ListenableFutureCallback<>() {
 
-                @Override
-                public void onSuccess(Void unused) {
-                    ui.access(
+                    @Override
+                    public void onSuccess(Void unused) {
+                        ui.access(
                             () -> {
                                 saveFormLayout.setVisible(false);
                                 menuLayout.setVisible(true);
-                                showSuccess("Baby data saved");
+                                showSuccess("Baby photo data successfully saved");
                             }
-                    );
-                }
+                        );
+                    }
 
-                @Override
-                public void onFailure(Throwable throwable) {
-                    ui.access(
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        ui.access(
                             () -> {
                                 saveFormLayout.setVisible(false);
                                 babyLayout.setVisible(true);
-                                showError("Failed to save the responses, please retry or contact Louise");
+                                showError("Failed to save the responses");
                             }
-                    );
-                }
-            });
+                        );
+                    }
+                });
+            } catch (ValidationException | ServiceException formException) {
+                saveFormLayout.setVisible(false);
+                formLayout.setVisible(true);
+                showError("Failed to save the responses");
+            }
         });
 
         formSubmitButton.addClickListener(e -> {
@@ -186,7 +199,7 @@ public class MainView extends VerticalLayout {
 
             try {
                 FormDetails detailsBean = new FormDetails();
-                binder.writeBean(detailsBean);
+                formDetailsBeanValidationBinder.writeBean(detailsBean);
                 formDetailsService.store(detailsBean).addCallback(new ListenableFutureCallback<>() {
 
                             @Override
@@ -204,7 +217,7 @@ public class MainView extends VerticalLayout {
                                 ui.access(() -> {
                                             saveFormLayout.setVisible(false);
                                             formLayout.setVisible(true);
-                                            showError("Failed to save the responses, please retry or contact Louise");
+                                            showError("Failed to save the responses");
                                         }
                                 );
                             }
@@ -213,7 +226,7 @@ public class MainView extends VerticalLayout {
             } catch (ValidationException | ServiceException formException) {
                 saveFormLayout.setVisible(false);
                 formLayout.setVisible(true);
-                showError("Failed to save the responses, please retry or contact Louise");
+                showError("Failed to save the responses");
             }
 
         });
@@ -230,7 +243,7 @@ public class MainView extends VerticalLayout {
         H2 title = new H2("Saving data, please wait...");
 
         progressBar.addThemeVariants(ProgressBarVariant.LUMO_CONTRAST);
-        progressBar.setMaxWidth(MIN_WITH);
+        progressBar.setMaxWidth(MIN_WIDTH);
         progressBar.setIndeterminate(true);
 
         savingLayout.add(title);
@@ -256,7 +269,7 @@ public class MainView extends VerticalLayout {
      * We call this method when form submission has succeeded
      */
     private void showSuccess(FormDetails detailsBean) {
-        Notification notification = Notification.show("Data saved, thanks for providing the data for " + detailsBean.getFirstname() + " " + detailsBean.getLastname());
+        Notification notification = Notification.show("Questionaire data saved, thanks for providing the data for " + detailsBean.getFirstname() + " " + detailsBean.getLastname());
         notification.setDuration(5000);
         notification.setPosition(Notification.Position.TOP_START);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -272,7 +285,8 @@ public class MainView extends VerticalLayout {
     }
 
     private void showError(String message) {
-        Notification notification = Notification.show(message, 5000, Notification.Position.TOP_START);
+        String fullMessage = message + ", please retry or contact " + AppConstants.SUPPORT_CONTACT;
+        Notification notification = Notification.show(fullMessage, 5000, Notification.Position.TOP_START);
         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
     }
 
@@ -284,6 +298,7 @@ public class MainView extends VerticalLayout {
     private VerticalLayout createPhoto(Button photoCancel) {
 
         VerticalLayout verticalLayout = new VerticalLayout();
+
         verticalLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         verticalLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         verticalLayout.setSpacing(true);
@@ -291,22 +306,28 @@ public class MainView extends VerticalLayout {
         H2 title = new H2("Upload Photos");
 
         verticalLayout.add(title);
+        Label titleLabel = new Label("Please upload additional photos that we can add to the leavers book, multiple photos can be uploaded either via the upload button or by dragging the photos onto the page. Photos are limited to a maximum size of 10MB");
+
+        HorizontalLayout header = new HorizontalLayout();
+        header.add(titleLabel);
+        header.setMaxWidth(MAX_WIDTH);
+        verticalLayout.add(header);
+
 
         MultiFileBufferToFile buffer = new MultiFileBufferToFile();
         Upload upload = new Upload(buffer);
-        upload.setMinWidth("490px");
-        upload.setMaxWidth("900px");
+
+        upload.setMinWidth(MIN_WIDTH);
+        upload.setMaxWidth(MAX_WIDTH);
 
         Div output = new Div();
 
-        upload.addSucceededListener(event -> {
-            showSuccess("Uploaded photo " + event.getFileName());
-            //Component component = createPhotoComponent(event.getMIMEType(), event.getFileName(), buffer.getInputStream(event.getFileName()));
-            //showOutput(event.getFileName(), component, output);
-
-        });
+        upload.addSucceededListener(event -> showSuccess("Uploaded photo " + event.getFileName()));
+        upload.addFailedListener(event -> showError("Upload failed: " + event.getReason()));
+        upload.addFileRejectedListener(event -> showError("Upload error: " + event.getErrorMessage()));
 
         verticalLayout.add(upload, output);
+        verticalLayout.add(new Label(" "));
         verticalLayout.add(photoCancel);
 
         verticalLayout.setVisible(false);
@@ -315,13 +336,15 @@ public class MainView extends VerticalLayout {
 
     }
 
-    private VerticalLayout createBaby(Button babySaveButton, Button cancel) {
+    private VerticalLayout createBaby(BeanValidationBinder<BabyDetails> binder, Button babySaveButton, Button cancel) {
         VerticalLayout babyVerticalLayout = new VerticalLayout();
         babyVerticalLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         babyVerticalLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         babyVerticalLayout.setSpacing(true);
 
         H2 title = new H2("Baby Photo");
+
+        Text txt = new Text("Please upload a baby photo for Guess Who!");
 
         TextField firstnameField = new TextField("First name");
         TextField lastnameField = new TextField("Last name");
@@ -333,6 +356,8 @@ public class MainView extends VerticalLayout {
         formLayout.setColspan(babyPicture, 2);
 
         babyVerticalLayout.add(title);
+        babyVerticalLayout.add(txt);
+
         babyVerticalLayout.add(formLayout);
         babyVerticalLayout.add(new Label(""));
 
@@ -345,6 +370,11 @@ public class MainView extends VerticalLayout {
         cancel.setMinWidth(MIN_BUTTON_WIDTH);
         babySaveButton.setMinWidth(MIN_BUTTON_WIDTH);
 
+        binder.forField(firstnameField).asRequired().bind("firstname");
+        binder.forField(lastnameField).asRequired().bind("lastname");
+        binder.forField(babyPicture).asRequired().bind("babyPicture");
+
+        babyVerticalLayout.add(new Label(" "));
         babyVerticalLayout.add(buttonLayout);
         babyVerticalLayout.setPadding(true);
 
@@ -360,22 +390,31 @@ public class MainView extends VerticalLayout {
 
         H2 title = new H2("Prep 6 Leavers Menu");
 
+        Label titleLabel = new Label("Thanks for logging into the leaver book site, this is to capture your childs information for their profile page in the book, along with the Guess Who baby quizz, please contact: " + AppConstants.SUPPORT_CONTACT + " if you have any issues");
+
         formButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         babyButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         photosButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         quitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
 
-        FormLayout formLayout = new FormLayout(formButton, babyButton, photosButton, quitButton);
+        FormLayout formLayout = new FormLayout(formButton, babyButton, photosButton);
         assignFormLayoutSettings(formLayout, true);
 
         formLayout.setColspan(formButton, 2);
         formLayout.setColspan(babyButton, 2);
         formLayout.setColspan(photosButton, 2);
-        formLayout.setColspan(quitButton, 2);
 
         menuVerticalLayout.add(title);
+        HorizontalLayout header = new HorizontalLayout();
+        header.add(titleLabel);
+        header.setMaxWidth(MAX_WIDTH);
+        menuVerticalLayout.add(header);
+
+        menuVerticalLayout.add(new Label(" "));
         menuVerticalLayout.add(formLayout);
+        menuVerticalLayout.add(new Label(" "));
+        menuVerticalLayout.add(quitButton);
 
         menuVerticalLayout.setVisible(false);
         return menuVerticalLayout;
@@ -392,6 +431,8 @@ public class MainView extends VerticalLayout {
 
         // main fields
         H2 title = new H2("Leavers Book Questionnaire");
+
+        Text txt1 = new Text("Please answer the following questions, these are for you profile page in the leavers book");
 
         TextField firstnameField = new TextField("First name");
         TextField lastnameField = new TextField("Last name");
@@ -436,6 +477,7 @@ public class MainView extends VerticalLayout {
         formLayout.add(new Label("")); // spacing
 
         formVerticalLayout.add(title);
+        formVerticalLayout.add(txt1);
         formVerticalLayout.add(formLayout);
 
         submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -446,6 +488,7 @@ public class MainView extends VerticalLayout {
         buttonLayout.setColspan(submitButton, 2);
         buttonLayout.setColspan(cancel, 2);
 
+        formVerticalLayout.add(new Label(" "));
         formVerticalLayout.add(buttonLayout);
 
         formVerticalLayout.setPadding(true);
@@ -455,72 +498,20 @@ public class MainView extends VerticalLayout {
     }
 
     private void assignFormLayoutSettings(FormLayout layout, boolean limtSteps) {
-        layout.setMaxWidth(MAX_WITH);
+        layout.setMaxWidth(MAX_WIDTH);
         layout.getStyle().set("margin", "0 auto");
         if(limtSteps) {
             layout.setResponsiveSteps(
                     new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP),
-                    new FormLayout.ResponsiveStep(MIN_WITH, 2, FormLayout.ResponsiveStep.LabelsPosition.TOP));
+                    new FormLayout.ResponsiveStep(MIN_WIDTH, 2, FormLayout.ResponsiveStep.LabelsPosition.TOP));
         } else {
             layout.setResponsiveSteps(
                     new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP),
-                    new FormLayout.ResponsiveStep(MIN_WITH, 2, FormLayout.ResponsiveStep.LabelsPosition.TOP),
-                    new FormLayout.ResponsiveStep(MAX_WITH, 4, FormLayout.ResponsiveStep.LabelsPosition.TOP));
+                    new FormLayout.ResponsiveStep(MIN_WIDTH, 2, FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                    new FormLayout.ResponsiveStep(MAX_WIDTH, 4, FormLayout.ResponsiveStep.LabelsPosition.TOP));
         }
     }
 
 
-
-    private Component createPhotoComponent(String mimeType, String fileName, InputStream stream) {
-
-        if (mimeType.startsWith("image")) {
-            Image image = new Image();
-            try {
-
-                byte[] bytes = IOUtils.toByteArray(stream);
-                image.getElement().setAttribute("src", new StreamResource(fileName, () -> new ByteArrayInputStream(bytes)));
-                try (ImageInputStream in = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
-                    final Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
-                    if (readers.hasNext()) {
-                        ImageReader reader = readers.next();
-                        try {
-                            reader.setInput(in);
-                            //image.setWidth(reader.getWidth(0) + "px");
-                            //image.setHeight(reader.getHeight(0) + "px");
-                            image.setHeight("100px");
-                        } finally {
-                            reader.dispose();
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return image;
-        }
-        Div content = new Div();
-        String text = String.format("Mime type: '%s'\nSHA-256 hash: '%s'", mimeType, MessageDigestUtil.sha256(stream.toString()));
-        content.setText(text);
-        return content;
-
-    }
-
-    private Component createTextComponent(InputStream stream) {
-        String text;
-        try {
-            text = IOUtils.toString(stream, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            text = "exception reading stream";
-        }
-        return new Text(text);
-    }
-
-    private void showOutput(String text, Component content, HasComponents outputContainer) {
-        HtmlComponent p = new HtmlComponent(Tag.P);
-        p.getElement().setText(text);
-        outputContainer.add(p);
-        outputContainer.add(content);
-    }
 
 }

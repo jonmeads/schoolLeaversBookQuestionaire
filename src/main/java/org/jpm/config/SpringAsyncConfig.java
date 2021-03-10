@@ -1,4 +1,4 @@
-package org.jpm.ui.config;
+package org.jpm.config;
 
 
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +10,7 @@ import java.util.concurrent.Executor;
 
 @Configuration
 @EnableAsync
-public class SpringConfig implements AsyncConfigurer {
+public class SpringAsyncConfig implements AsyncConfigurer {
 
     @Override
     public Executor getAsyncExecutor() {

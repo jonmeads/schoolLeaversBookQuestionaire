@@ -1,8 +1,11 @@
-package org.jpm.ui.data;
+package org.jpm.models;
 
+import org.apache.commons.lang3.text.StrBuilder;
 import org.hibernate.validator.constraints.Length;
+import org.jpm.ui.data.PictureImage;
 
 import javax.validation.constraints.NotNull;
+import java.lang.reflect.Field;
 
 /**
  * Main Bean class that we build the form for.
@@ -14,10 +17,10 @@ public class FormDetails {
     private Long id;
 
     @NotNull
-    @Length(min = 1, max = 32)
+    @Length(min = 1, max = 50)
     private String firstname;
     @NotNull
-    @Length(min = 1, max = 32)
+    @Length(min = 1, max = 50)
     private String lastname;
 
     @NotNull
@@ -69,6 +72,30 @@ public class FormDetails {
     @Length(min = 1, max = 200)
     private String q9;
 
+
+    public String displayData() throws NoSuchFieldException, IllegalAccessException {
+
+
+        StrBuilder sb = new StrBuilder();
+        sb.append(firstname).append(" ").append(lastname).appendNewLine();
+        sb.append("Form: ").append(form).appendNewLine();
+        sb.append("House: ").append(house).appendNewLine();
+        if(prefectRole != null && !prefectRole.isEmpty()) {
+            sb.append("Prefect Role: ").append(prefectRole).appendNewLine();
+        }
+        for(FormQuestion question : FormQuestion.getOrderedQuestions()) {
+            sb.append(question.getDescription()).appendNewLine();
+
+
+            Field field = this.getClass().getDeclaredField(question.getPojoField());
+            field.setAccessible(true);
+            String value = (String) field.get(this);
+
+            sb.append(value).appendNewLine();
+        }
+
+        return sb.toString();
+    }
 
 
     public Long getId() {

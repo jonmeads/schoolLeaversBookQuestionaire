@@ -13,6 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag schoolleaversbook:latest
+      - uses: actions/checkout@v2
+      - name: docker login
+        env:
+          DOCKER_USER: ${{secrets.DOCKER_USER}}
+          DOCKER_TOKEN: ${{secrets.DOCKER_TOKEN}}
+        run: |
+          docker login -u $DOCKER_USER -p $DOCKER_TOKEN
+      - name: build the docker image
+        run: docker build . --file Dockerfile --tag ${{secrets.DOCKER_USER}}/schoolleaver:latest
+
+      - name: docker push
+        run: docker push ${{secrets.DOCKER_USER}}/schoolleaver
+

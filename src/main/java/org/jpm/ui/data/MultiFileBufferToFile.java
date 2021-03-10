@@ -3,8 +3,13 @@ package org.jpm.ui.data;
 import com.google.common.io.Files;
 import com.vaadin.flow.component.upload.MultiFileReceiver;
 import com.vaadin.flow.component.upload.receivers.FileData;
+import org.jpm.config.AppConstants;
+import org.jpm.config.utils.FileUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +41,7 @@ public class MultiFileBufferToFile implements MultiFileReceiver {
     }
 
 
+
     protected FileOutputStream createFileOutputStream(String fileName) {
         String newFilename = "";
         try {
@@ -43,7 +49,9 @@ public class MultiFileBufferToFile implements MultiFileReceiver {
             String ext = Files.getFileExtension(fileName);
             ext = ext != null ? ".".concat(ext) : null;
 
-            File dir = new File("D:\\DATA\\PHOTOS");
+
+            File dir = new File(AppConstants.OUTPUT_LOCATION_PHOTOS);
+            FileUtils.createDirectory(dir);
 
             File fileToSave = File.createTempFile("PhotoUpload", ext, dir);
             newFilename = fileToSave.toString();
@@ -56,6 +64,8 @@ public class MultiFileBufferToFile implements MultiFileReceiver {
             return null;
         }
     }
+
+
 
 
 }

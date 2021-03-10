@@ -1,4 +1,4 @@
-package org.jpm.ui.data;
+package org.jpm.models;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -43,7 +43,7 @@ public enum FormQuestion {
         return order;
     }
 
-    public List<FormQuestion> getOrderedQuestions() {
+    public static List<FormQuestion> getOrderedQuestions() {
         return  Arrays.stream(FormQuestion.values())
                 .sorted(Comparator.comparing(FormQuestion::getOrder))
                 .collect(Collectors.toList());

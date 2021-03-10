@@ -1,4 +1,4 @@
-package org.jpm.ui;
+package org.jpm;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

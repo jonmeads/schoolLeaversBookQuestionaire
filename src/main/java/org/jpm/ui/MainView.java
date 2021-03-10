@@ -185,7 +185,11 @@ public class MainView extends VerticalLayout {
                         );
                     }
                 });
-            } catch (ValidationException | ServiceException formException) {
+            } catch (ValidationException formException) {
+                saveFormLayout.setVisible(false);
+                babyLayout.setVisible(true);
+                showValidationError("Please confirm all required fields have been completed including uploading the pictures.");
+            } catch (ServiceException se) {
                 saveFormLayout.setVisible(false);
                 babyLayout.setVisible(true);
                 showError("Failed to save the responses");
@@ -223,7 +227,11 @@ public class MainView extends VerticalLayout {
                             }
                         });
 
-            } catch (ValidationException | ServiceException formException) {
+            } catch (ValidationException formException) {
+                saveFormLayout.setVisible(false);
+                formLayout.setVisible(true);
+                showValidationError("Please confirm all required fields have been completed including uploading the pictures.");
+            } catch (ServiceException se) {
                 saveFormLayout.setVisible(false);
                 formLayout.setVisible(true);
                 showError("Failed to save the responses");
@@ -287,6 +295,11 @@ public class MainView extends VerticalLayout {
     private void showError(String message) {
         String fullMessage = message + ", please retry or contact " + AppConstants.SUPPORT_CONTACT;
         Notification notification = Notification.show(fullMessage, 5000, Notification.Position.TOP_START);
+        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+    }
+
+    private void showValidationError(String message) {
+        Notification notification = Notification.show(message, 5000, Notification.Position.TOP_START);
         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
     }
 

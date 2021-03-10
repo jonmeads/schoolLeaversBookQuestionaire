@@ -33,6 +33,7 @@ public class FormDetails {
 
     private PictureImage startPrepPicture;
     private PictureImage endOfPrepPicture;
+    private PictureImage havingFunPicture;
 
     // update these, you'll need to update FormQuestionEnum
 
@@ -71,6 +72,10 @@ public class FormDetails {
     @NotNull
     @Length(min = 1, max = 200)
     private String q9;
+
+    @NotNull
+    @Length(min = 1, max = 200)
+    private String q10;
 
 
     public String displayData() throws NoSuchFieldException, IllegalAccessException {
@@ -162,6 +167,13 @@ public class FormDetails {
         this.endOfPrepPicture = endOfPrepPicture;
     }
 
+    public PictureImage getHavingFunPicture() {
+        return havingFunPicture;
+    }
+
+    public void setHavingFunPicture(PictureImage havingFunPicture) {
+        this.havingFunPicture = havingFunPicture;
+    }
 
     // generic questions
 
@@ -237,6 +249,13 @@ public class FormDetails {
         this.q9 = q9;
     }
 
+    public String getQ10() {
+        return q10;
+    }
+
+    public void setQ10(String q10) {
+        this.q10 = q10;
+    }
 
     @Override
     public int hashCode() {

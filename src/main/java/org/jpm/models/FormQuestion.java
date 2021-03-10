@@ -11,15 +11,16 @@ public enum FormQuestion {
      * changes here to the number of questions need the FormDetails POJO changed too
      */
 
-    Q1("Best memory of St Columbas?","q1", 1),
-    Q2("What I'll miss about Prep","q2", 2),
-    Q3("What I'm looking forward to at Senior School","q3",3),
-    Q4("My Proudest Moment", "q4",4),
-    Q5("Your favourite subject", "q5",5),
-    Q6("Your favourite Game/Craze/Movie", "q6",6),
-    Q7("What would you like to do when older?", "q7",7),
-    Q8("Favourite thing to do out of school?", "q8",8),
-    Q9("What was the worst thing about lock down?", "q9",9);
+    Q1("My best memory of St Columba's:","q1", 1),
+    Q2("What I'll miss about Prep:","q2", 2),
+    Q3("What I'm looking forward to at Senior School...","q3",3),
+    Q4("My proudest moment:", "q4",4),
+    Q5("My favourite subject and why:", "q5",5),
+    Q6("My favourite book / game / craze / movie...", "q6",6),
+    Q7("When I'm older...?", "q7",7),
+    Q8("My favourite thing to do out of school:", "q8",8),
+    Q9("A random fact about me...", "q9",9),
+    Q10("If I had a super power it be...", "q10",10);
 
     private String description;
     private String pojoField;

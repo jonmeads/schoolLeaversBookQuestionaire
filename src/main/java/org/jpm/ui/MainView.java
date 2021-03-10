@@ -187,7 +187,7 @@ public class MainView extends VerticalLayout {
                 });
             } catch (ValidationException | ServiceException formException) {
                 saveFormLayout.setVisible(false);
-                formLayout.setVisible(true);
+                babyLayout.setVisible(true);
                 showError("Failed to save the responses");
             }
         });
@@ -465,15 +465,19 @@ public class MainView extends VerticalLayout {
 
         PictureField startPrepPictureField = new PictureField("Select start of Prep image");
         PictureField endOfPrepPictureField = new PictureField("Select end of Prep image");
+        PictureField havingFunPictureField = new PictureField("Select having fun image");
 
-        formLayout.setColspan(startPrepPictureField, 2);
-        formLayout.setColspan(endOfPrepPictureField, 2);
+        formLayout.setColspan(startPrepPictureField, 3);
+        formLayout.setColspan(endOfPrepPictureField, 3);
+        formLayout.setColspan(havingFunPictureField, 3);
 
         binder.forField(startPrepPictureField).asRequired().bind("startPrepPicture");
         binder.forField(endOfPrepPictureField).asRequired().bind("endOfPrepPicture");
+        binder.forField(havingFunPictureField).asRequired().bind("havingFunPicture");
 
         formLayout.add(startPrepPictureField);
         formLayout.add(endOfPrepPictureField);
+        formLayout.add(havingFunPictureField);
         formLayout.add(new Label("")); // spacing
 
         formVerticalLayout.add(title);

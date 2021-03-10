@@ -25,6 +25,7 @@ public class FormDetailsService extends DetailsServiceAbstract implements Serial
             saveFormDataToLocation(formDetails.displayData(), "answersData", formOutputLocation);
             saveImageToLocation(formDetails.getStartPrepPicture(), "startPrep", formOutputLocation);
             saveImageToLocation(formDetails.getEndOfPrepPicture(), "endPrep", formOutputLocation);
+            saveImageToLocation(formDetails.getHavingFunPicture(), "funPic", formOutputLocation);
 
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new ServiceException("Failed to parse form data to file" + e.toString());

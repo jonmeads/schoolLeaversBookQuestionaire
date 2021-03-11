@@ -9,9 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import java.io.Serializable;
+import java.util.logging.Logger;
 
 @Service
 public class FormDetailsService extends DetailsServiceAbstract implements Serializable {
+
+    private final static Logger LOGGER = Logger.getLogger(FormDetailsService.class.getName());
 
     public FormDetailsService() {
     }
@@ -19,6 +22,7 @@ public class FormDetailsService extends DetailsServiceAbstract implements Serial
     @Async
     public ListenableFuture<Void> store(FormDetails formDetails) throws ServiceException {
 
+        LOGGER.info("starting save of questionaire data");
         try {
             String formOutputLocation = getSaveLocation(AppConstants.OUTPUT_LOCATION_FORM);
 
@@ -28,6 +32,7 @@ public class FormDetailsService extends DetailsServiceAbstract implements Serial
             saveImageToLocation(formDetails.getHavingFunPicture(), "funPic", formOutputLocation);
 
         } catch (NoSuchFieldException | IllegalAccessException e) {
+            LOGGER.severe("Failure saving questionaire data " + e);
             throw new ServiceException("Failed to parse form data to file" + e.toString());
         }
         return AsyncResult.forValue(null);

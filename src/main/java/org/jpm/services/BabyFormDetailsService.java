@@ -9,15 +9,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import java.io.Serializable;
+import java.util.logging.Logger;
 
 @Service
 public class BabyFormDetailsService extends DetailsServiceAbstract implements Serializable {
+
+    private final static Logger LOGGER = Logger.getLogger(BabyFormDetailsService.class.getName());
 
     public BabyFormDetailsService() {
     }
 
     @Async
     public ListenableFuture<Void> store(BabyDetails babyDetails) throws ServiceException {
+
+        LOGGER.info("Saving data");
 
         String formOutputLocation = getSaveLocation(AppConstants.OUTPUT_LOCATION_BABY);
 

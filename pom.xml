@@ -140,6 +140,20 @@
     </dependencies>
 
     <build>
+        <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <!-- This entry without filtering to get the favicon.ico copied in without it being filtered - i.e. treated like a text file and mangled. -->
+        </resource>
+        <resource>
+            <directory>src/main/resources</directory>
+            <filtering>true</filtering>
+            <excludes>
+                <exclude>META-INF/resources/**</exclude>
+                <!-- Leave the favicon.ico out here as we did it above and don't want it mangled. -->
+            </excludes>
+        </resource>
+        </resources>
         <defaultGoal>spring-boot:run</defaultGoal>
         <plugins>
             <plugin>

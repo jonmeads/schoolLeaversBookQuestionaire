@@ -1,7 +1,8 @@
 # Stage that builds the application, a prerequisite for the running stage
 FROM maven:3-jdk-11 as build
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
-RUN apt-get update -qq && apt-get install -qq --no-install-recommends nodejs
+RUN apt-get install -qq --no-install-recommends nodejs
+# removed apt-get update -qq &&
 
 # Stop running as root at this point
 RUN useradd -m myuser

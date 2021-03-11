@@ -23,7 +23,11 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.PWA;
+import com.vaadin.flow.theme.Theme;
+import com.vaadin.flow.theme.lumo.Lumo;
 import org.jpm.config.AppConstants;
 import org.jpm.exceptions.ServiceException;
 import org.jpm.models.BabyDetails;
@@ -36,11 +40,17 @@ import org.jpm.ui.data.MultiFileBufferToFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
+import java.util.logging.Logger;
+
 
 @JsModule("./js/theme-selector.js")
 @Route("")
 @Push
+@Theme(value = Lumo.class)
+@PWA(name = "School Leavers", shortName = "leavers")
 public class MainView extends VerticalLayout {
+
+    private final static Logger LOGGER = Logger.getLogger(MainView.class.getName());
 
     private static final String MIN_WIDTH = "490px";
     private static final String MAX_WIDTH = "900px";
@@ -65,6 +75,17 @@ public class MainView extends VerticalLayout {
 
 
     protected void constructUI() {
+
+        // theme button
+        Button toggleTheme = new Button("Toggle dark theme", click -> {
+            ThemeList themeList = UI.getCurrent().getElement().getThemeList();
+            if(themeList.contains(Lumo.DARK)) {
+                themeList.remove(Lumo.DARK);
+            } else {
+                themeList.add(Lumo.DARK);
+            }
+        });
+
         // form
         Button formSubmitButton = new Button("Save");
         Button formCancel = new Button("Cancel");
@@ -96,16 +117,30 @@ public class MainView extends VerticalLayout {
         LoginOverlay loginComponent = getLoginOverlay();
         loginComponent.addLoginListener(e -> {
             if(AppConstants.AUTH_PASS.equals(e.getPassword()) && AppConstants.AUTH_USER.equals(e.getUsername())) {
+                LOGGER.info("Successful login");
                 loginComponent.close();
                 menuLayout.setVisible(true);
             } else {
+                LOGGER.warning("Failed login attempt, using supplied values of user: " + e.getUsername() + ", passwd: " + e.getPassword());
                 loginComponent.setError(true);
                 loginComponent.setEnabled(true);
-
             }
         });
         loginComponent.setOpened(true);
 
+
+
+
+        // add theme button top right
+        HorizontalLayout horizontalLayout = new HorizontalLayout();
+        horizontalLayout.setDefaultVerticalComponentAlignment(Alignment.END);
+
+        VerticalLayout vertLayout = new VerticalLayout();
+        vertLayout.setDefaultHorizontalComponentAlignment(Alignment.END);
+
+        horizontalLayout.add(toggleTheme);
+        vertLayout.add(horizontalLayout);
+        add(vertLayout);
 
         // Add the layouts to the page
         add(loginComponent);
@@ -118,16 +153,19 @@ public class MainView extends VerticalLayout {
 
         // listeners
         formButton.addClickListener(e -> {
+            LOGGER.info("Opening Questionaire");
             menuLayout.setVisible(false);
             formLayout.setVisible(true);
         });
 
         babyButton.addClickListener(e -> {
+            LOGGER.info("Opening Baby form");
             menuLayout.setVisible(false);
             babyLayout.setVisible(true);
         });
 
         photosButton.addClickListener(e -> {
+            LOGGER.info("Opening Photos");
             menuLayout.setVisible(false);
             photoLayout.setVisible(true);
         });
@@ -150,6 +188,7 @@ public class MainView extends VerticalLayout {
         });
 
         babySaveButton.addClickListener(e -> {
+            LOGGER.info("Saving Baby Form Data");
             babyLayout.setVisible(false);
             saveFormLayout.setVisible(true);
             UI ui = UI.getCurrent();
@@ -169,6 +208,7 @@ public class MainView extends VerticalLayout {
                             () -> {
                                 saveFormLayout.setVisible(false);
                                 menuLayout.setVisible(true);
+                                LOGGER.info("Baby photo data successfully saved ");
                                 showSuccess("Baby photo data successfully saved");
                             }
                         );
@@ -180,7 +220,8 @@ public class MainView extends VerticalLayout {
                             () -> {
                                 saveFormLayout.setVisible(false);
                                 babyLayout.setVisible(true);
-                                showError("Failed to save the responses");
+                                LOGGER.warning("Failed to save the baby photo data" + throwable);
+                                showError("Failed to save the baby photo data");
                             }
                         );
                     }
@@ -188,15 +229,18 @@ public class MainView extends VerticalLayout {
             } catch (ValidationException formException) {
                 saveFormLayout.setVisible(false);
                 babyLayout.setVisible(true);
+                LOGGER.warning("Baby form validation error");
                 showValidationError("Please confirm all required fields have been completed including uploading the pictures.");
             } catch (ServiceException se) {
                 saveFormLayout.setVisible(false);
                 babyLayout.setVisible(true);
-                showError("Failed to save the responses");
+                LOGGER.warning("Failed to save the baby photo data" + se);
+                showError("Failed to save the baby photo data");
             }
         });
 
         formSubmitButton.addClickListener(e -> {
+            LOGGER.info("Saving the questionaire data");
             UI ui = UI.getCurrent();
             formLayout.setVisible(false);
             saveFormLayout.setVisible(true);
@@ -211,6 +255,7 @@ public class MainView extends VerticalLayout {
                                 ui.access(() -> {
                                             saveFormLayout.setVisible(false);
                                             menuLayout.setVisible(true);
+                                            LOGGER.info("Successfully saved the questionaire data");
                                             showSuccess(detailsBean);
                                         }
                                 );
@@ -221,6 +266,7 @@ public class MainView extends VerticalLayout {
                                 ui.access(() -> {
                                             saveFormLayout.setVisible(false);
                                             formLayout.setVisible(true);
+                                            LOGGER.warning("Failed to save the questionaire data" + throwable);
                                             showError("Failed to save the responses");
                                         }
                                 );
@@ -230,10 +276,12 @@ public class MainView extends VerticalLayout {
             } catch (ValidationException formException) {
                 saveFormLayout.setVisible(false);
                 formLayout.setVisible(true);
+                LOGGER.warning("Validation failure for questionaire data");
                 showValidationError("Please confirm all required fields have been completed including uploading the pictures.");
             } catch (ServiceException se) {
                 saveFormLayout.setVisible(false);
                 formLayout.setVisible(true);
+                LOGGER.warning("Failed to save the questionaire data" + se);
                 showError("Failed to save the responses");
             }
 

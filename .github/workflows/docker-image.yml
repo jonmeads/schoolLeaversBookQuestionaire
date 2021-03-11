@@ -19,7 +19,7 @@ jobs:
           DOCKER_USER: ${{secrets.DOCKER_USER}}
           DOCKER_TOKEN: ${{secrets.DOCKER_TOKEN}}
         run: |
-          docker login -u $DOCKER_USER -p $DOCKER_TOKEN
+          echo "$DOCKER_TOKEN" | docker login -u $DOCKER_USER --password-stdin
       - name: build the docker image
         run: docker build . --file Dockerfile --tag ${{secrets.DOCKER_USER}}/schoolleaver:latest
 

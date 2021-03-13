@@ -3,6 +3,8 @@ package org.jpm.services;
 import org.jpm.config.AppConstants;
 import org.jpm.exceptions.ServiceException;
 import org.jpm.models.FormDetails;
+import org.jpm.services.dao.JdbcLeaversDao;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
@@ -16,20 +18,25 @@ public class FormDetailsService extends DetailsServiceAbstract implements Serial
 
     private final static Logger LOGGER = Logger.getLogger(FormDetailsService.class.getName());
 
-    public FormDetailsService() {
+    private JdbcLeaversDao jdbcLeaversDao;
+
+    public FormDetailsService(@Autowired JdbcLeaversDao jdbcLeaversDao) {
+        this.jdbcLeaversDao = jdbcLeaversDao;
     }
 
     @Async
-    public ListenableFuture<Void> store(FormDetails formDetails) throws ServiceException {
+    public ListenableFuture<Void> store(FormDetails formDetails, String session) throws ServiceException {
 
-        LOGGER.info("starting save of questionaire data");
+        LOGGER.info("Starting save of questionaire data");
         try {
-            String formOutputLocation = getSaveLocation(AppConstants.OUTPUT_LOCATION_FORM);
+            String formOutputLocation = getSaveLocation(AppConstants.OUTPUT_LOCATION_FORM, session);
 
             saveFormDataToLocation(formDetails.displayData(), "answersData", formOutputLocation);
             saveImageToLocation(formDetails.getStartPrepPicture(), "startPrep", formOutputLocation);
             saveImageToLocation(formDetails.getEndOfPrepPicture(), "endPrep", formOutputLocation);
             saveImageToLocation(formDetails.getHavingFunPicture(), "funPic", formOutputLocation);
+
+            jdbcLeaversDao.saveForm(session, formDetails.getFullname());
 
         } catch (NoSuchFieldException | IllegalAccessException e) {
             LOGGER.severe("Failure saving questionaire data " + e);

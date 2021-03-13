@@ -12,12 +12,9 @@ public class BabyDetails {
     private Long id;
 
     @NotNull
-    @Length(min = 1, max = 50)
-    private String firstname;
+    @Length(min = 1, max = 100)
+    private String fullname;
 
-    @NotNull
-    @Length(min = 1, max = 50)
-    private String lastname;
 
     @NotNull
     private PictureImage babyPicture;
@@ -26,7 +23,7 @@ public class BabyDetails {
     public String displayData() {
 
         StrBuilder sb = new StrBuilder();
-        sb.append(firstname).append(" ").append(lastname).appendNewLine();
+        sb.append(fullname).appendNewLine();
 
         return sb.toString();
     }
@@ -39,20 +36,12 @@ public class BabyDetails {
         this.id = id;
     }
 
-    public String getFirstname() {
-        return firstname;
+    public String getFullname() {
+        return fullname;
     }
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
-    }
-
-    public String getLastname() {
-        return lastname;
-    }
-
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
     }
 
     public PictureImage getBabyPicture() {
@@ -68,20 +57,19 @@ public class BabyDetails {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BabyDetails that = (BabyDetails) o;
-        return Objects.equals(id, that.id) && Objects.equals(firstname, that.firstname) && Objects.equals(lastname, that.lastname) && Objects.equals(babyPicture, that.babyPicture);
+        return Objects.equals(id, that.id) && Objects.equals(fullname, that.fullname) && Objects.equals(babyPicture, that.babyPicture);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, firstname, lastname, babyPicture);
+        return Objects.hash(id, fullname, babyPicture);
     }
 
     @Override
     public String toString() {
         return "BabyDetails{" +
                 "id=" + id +
-                ", firstname='" + firstname + '\'' +
-                ", lastname='" + lastname + '\'' +
+                ", fullname='" + fullname + '\'' +
                 ", babyPicture=" + babyPicture +
                 '}';
     }

@@ -17,11 +17,8 @@ public class FormDetails {
     private Long id;
 
     @NotNull
-    @Length(min = 1, max = 50)
-    private String firstname;
-    @NotNull
-    @Length(min = 1, max = 50)
-    private String lastname;
+    @Length(min = 1, max = 100)
+    private String fullname;
 
     @NotNull
     private String form;
@@ -82,11 +79,11 @@ public class FormDetails {
 
 
         StrBuilder sb = new StrBuilder();
-        sb.append(firstname).append(" ").append(lastname).appendNewLine();
-        sb.append("Form: ").append(form).appendNewLine();
-        sb.append("House: ").append(house).appendNewLine();
+        sb.append(fullname).appendNewLine().appendNewLine();
+        sb.append("Form: ").append(form).appendNewLine().appendNewLine();
+        sb.append("House: ").append(house).appendNewLine().appendNewLine();
         if(prefectRole != null && !prefectRole.isEmpty()) {
-            sb.append("Prefect Role: ").append(prefectRole).appendNewLine();
+            sb.append("Prefect Role: ").append(prefectRole).appendNewLine().appendNewLine();
         }
         for(FormQuestion question : FormQuestion.getOrderedQuestions()) {
             sb.append(question.getDescription()).appendNewLine();
@@ -96,7 +93,7 @@ public class FormDetails {
             field.setAccessible(true);
             String value = (String) field.get(this);
 
-            sb.append(value).appendNewLine();
+            sb.append(value).appendNewLine().appendNewLine();
         }
 
         return sb.toString();
@@ -111,20 +108,12 @@ public class FormDetails {
         this.id = id;
     }
 
-    public String getFirstname() {
-        return firstname;
+    public String getFullname() {
+        return fullname;
     }
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
-    }
-
-    public String getLastname() {
-        return lastname;
-    }
-
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
     }
 
     public String getForm() {

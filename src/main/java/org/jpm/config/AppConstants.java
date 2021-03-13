@@ -14,6 +14,11 @@ public class AppConstants {
 
     public static final String SUPPORT_CONTACT = getSupportContact();
 
+    public static final String DB_NAME = getDb();
+
+
+    public static final Integer MAX_THREADS = 10;
+
     public static final String TEXT_FILE_EXT = ".txt";
 
 
@@ -33,15 +38,19 @@ public class AppConstants {
         return getProperty("SUPPORT_CONTACT", "Bob the builder!");
     }
 
-    public static String getPhotoOutputLocation() {
+    protected static String getDb() {
+        return getProperty("DB", "192.168.8.250");
+    }
+
+    protected static String getPhotoOutputLocation() {
         return getOutputLocation() + File.separatorChar + "photos";
     }
 
-    public static String getBabyOutputLocation() {
+    protected static String getBabyOutputLocation() {
         return getOutputLocation() + File.separatorChar + "baby";
     }
 
-    public static String getFormOutputLocation() {
+    protected static String getFormOutputLocation() {
         return getOutputLocation() + File.separatorChar + "forms";
     }
 

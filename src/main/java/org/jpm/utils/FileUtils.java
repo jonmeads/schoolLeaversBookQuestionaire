@@ -1,4 +1,4 @@
-package org.jpm.config.utils;
+package org.jpm.utils;
 
 import java.io.File;
 import java.io.IOException;

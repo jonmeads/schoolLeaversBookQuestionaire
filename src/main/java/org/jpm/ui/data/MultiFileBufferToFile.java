@@ -4,7 +4,7 @@ import com.google.common.io.Files;
 import com.vaadin.flow.component.upload.MultiFileReceiver;
 import com.vaadin.flow.component.upload.receivers.FileData;
 import org.jpm.config.AppConstants;
-import org.jpm.config.utils.FileUtils;
+import org.jpm.utils.FileUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;

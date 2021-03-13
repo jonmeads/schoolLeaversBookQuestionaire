@@ -4,7 +4,7 @@ package org.jpm.services;
 import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jpm.config.AppConstants;
-import org.jpm.config.utils.FileUtils;
+import org.jpm.utils.FileUtils;
 import org.jpm.exceptions.ServiceException;
 import org.jpm.ui.data.PictureImage;
 
@@ -17,10 +17,12 @@ public class DetailsServiceAbstract {
 
     private final static Logger LOGGER = Logger.getLogger(DetailsServiceAbstract.class.getName());
 
-    protected String getSaveLocation(String baseLocation) {
-        String generatedString = RandomStringUtils.randomAlphanumeric(10);
+    protected String getSaveLocation(String baseLocation, String session) {
+        if(session == null || session.isEmpty()) {
+            session = RandomStringUtils.randomAlphanumeric(10);
+        }
 
-        return baseLocation + File.separatorChar + generatedString;
+        return baseLocation + File.separatorChar + session;
     }
 
 

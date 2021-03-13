@@ -28,6 +28,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.jpm.config.AppConstants;
 import org.jpm.exceptions.ServiceException;
 import org.jpm.models.BabyDetails;
@@ -61,6 +62,7 @@ public class MainView extends VerticalLayout {
     private BabyFormDetailsService babyFormDetailsService;
     private BeanValidationBinder<FormDetails> formDetailsBeanValidationBinder;
     private BeanValidationBinder<BabyDetails> babyDetailsBeanValidationBinder;
+    private String session;
 
 
     public MainView(@Autowired FormDetailsService formDetailsService, @Autowired BabyFormDetailsService babyFormDetailsService) {
@@ -69,6 +71,7 @@ public class MainView extends VerticalLayout {
         this.babyFormDetailsService = babyFormDetailsService;
         formDetailsBeanValidationBinder = new BeanValidationBinder<>(FormDetails.class);
         babyDetailsBeanValidationBinder = new BeanValidationBinder<>(BabyDetails.class);
+        this.session = RandomStringUtils.randomAlphanumeric(10);
 
         constructUI();
     }
@@ -131,16 +134,16 @@ public class MainView extends VerticalLayout {
 
 
 
-        // add theme button top right
-        HorizontalLayout horizontalLayout = new HorizontalLayout();
-        horizontalLayout.setDefaultVerticalComponentAlignment(Alignment.END);
-
-        VerticalLayout vertLayout = new VerticalLayout();
-        vertLayout.setDefaultHorizontalComponentAlignment(Alignment.END);
-
-        horizontalLayout.add(toggleTheme);
-        vertLayout.add(horizontalLayout);
-        add(vertLayout);
+//        // add theme button top right
+//        HorizontalLayout horizontalLayout = new HorizontalLayout();
+//        horizontalLayout.setDefaultVerticalComponentAlignment(Alignment.END);
+//
+//        VerticalLayout vertLayout = new VerticalLayout();
+//        vertLayout.setDefaultHorizontalComponentAlignment(Alignment.END);
+//
+//        horizontalLayout.add(toggleTheme);
+//        vertLayout.add(horizontalLayout);
+//        add(vertLayout);
 
         // Add the layouts to the page
         add(loginComponent);
@@ -199,7 +202,7 @@ public class MainView extends VerticalLayout {
                 babyDetailsBeanValidationBinder.writeBean(detailsBean);
 
                 babyFormDetailsService
-                    .store(detailsBean)
+                    .store(detailsBean, session)
                     .addCallback(new ListenableFutureCallback<>() {
 
                     @Override
@@ -248,7 +251,7 @@ public class MainView extends VerticalLayout {
             try {
                 FormDetails detailsBean = new FormDetails();
                 formDetailsBeanValidationBinder.writeBean(detailsBean);
-                formDetailsService.store(detailsBean).addCallback(new ListenableFutureCallback<>() {
+                formDetailsService.store(detailsBean, session).addCallback(new ListenableFutureCallback<>() {
 
                             @Override
                             public void onSuccess(Void unused) {
@@ -325,7 +328,7 @@ public class MainView extends VerticalLayout {
      * We call this method when form submission has succeeded
      */
     private void showSuccess(FormDetails detailsBean) {
-        Notification notification = Notification.show("Questionaire data saved, thanks for providing the data for " + detailsBean.getFirstname() + " " + detailsBean.getLastname());
+        Notification notification = Notification.show("Questionaire data saved, thanks for providing the data for " + detailsBean.getFullname());
         notification.setDuration(5000);
         notification.setPosition(Notification.Position.TOP_START);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -378,9 +381,6 @@ public class MainView extends VerticalLayout {
         MultiFileBufferToFile buffer = new MultiFileBufferToFile();
         Upload upload = new Upload(buffer);
 
-        upload.setMinWidth(MIN_WIDTH);
-        upload.setMaxWidth(MAX_WIDTH);
-
         Div output = new Div();
 
         upload.addSucceededListener(event -> showSuccess("Uploaded photo " + event.getFileName()));
@@ -407,13 +407,13 @@ public class MainView extends VerticalLayout {
 
         Text txt = new Text("Please upload a baby photo for Guess Who!");
 
-        TextField firstnameField = new TextField("First name");
-        TextField lastnameField = new TextField("Last name");
+        TextField nameField = new TextField("Full name");
         PictureField babyPicture = new PictureField("Select baby photo");
 
-        FormLayout formLayout = new FormLayout(firstnameField, lastnameField, babyPicture);
+        FormLayout formLayout = new FormLayout(nameField, babyPicture);
         assignFormLayoutSettings(formLayout, true);
 
+        formLayout.setColspan(nameField, 2);
         formLayout.setColspan(babyPicture, 2);
 
         babyVerticalLayout.add(title);
@@ -431,8 +431,7 @@ public class MainView extends VerticalLayout {
         cancel.setMinWidth(MIN_BUTTON_WIDTH);
         babySaveButton.setMinWidth(MIN_BUTTON_WIDTH);
 
-        binder.forField(firstnameField).asRequired().bind("firstname");
-        binder.forField(lastnameField).asRequired().bind("lastname");
+        binder.forField(nameField).asRequired().bind("fullname");
         binder.forField(babyPicture).asRequired().bind("babyPicture");
 
         babyVerticalLayout.add(new Label(" "));
@@ -495,8 +494,7 @@ public class MainView extends VerticalLayout {
 
         Text txt1 = new Text("Please answer the following questions, these are for you profile page in the leavers book");
 
-        TextField firstnameField = new TextField("First name");
-        TextField lastnameField = new TextField("Last name");
+        TextField fullnameField = new TextField("Full name");
 
         ComboBox<String> formComboBox = new ComboBox<>();
         formComboBox.setItems("Kells", "Derry", "Swords");
@@ -508,14 +506,14 @@ public class MainView extends VerticalLayout {
 
         TextField prefectRoleField = new TextField("Prefect Role");
 
-        binder.forField(firstnameField).asRequired().bind("firstname");
-        binder.forField(lastnameField).asRequired().bind("lastname");
+        binder.forField(fullnameField).asRequired().bind("fullname");
         binder.forField(formComboBox).asRequired().bind("form");
         binder.forField(houseComboBox).asRequired().bind("house");
         binder.forField(prefectRoleField).bind("prefectRole"); // not required
 
-        FormLayout formLayout = new FormLayout(firstnameField, lastnameField, formComboBox,houseComboBox, prefectRoleField);
+        FormLayout formLayout = new FormLayout(fullnameField,  formComboBox,houseComboBox, prefectRoleField);
         assignFormLayoutSettings(formLayout, false);
+        formLayout.setColspan(fullnameField, 2);
 
         for(FormQuestion question : FormQuestion.values()) {
             TextField field = new TextField(question.getDescription());

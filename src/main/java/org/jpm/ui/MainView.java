@@ -501,7 +501,7 @@ public class MainView extends VerticalLayout {
 
         H2 title = new H2("Prep 6 Leavers Menu");
 
-        Label titleLabel = new Label("Thanks for logging into the leaver book site, this is to capture your childs information for their profile page in the book, along with the Guess Who baby quizz, please contact: " + AppConstants.SUPPORT_CONTACT + " if you have any issues");
+        Label titleLabel = new Label("Thanks for logging into the leaver book site. This information will be used to make your son's profile in the leavers book. We are also doing a \"Guess the Baby\" section and as many other photo spreads as we can. Please upload any photos you have to give us a good selection to choose from for the book.\n\nPlease contact: " + AppConstants.SUPPORT_CONTACT + " if you have any issues");
 
         formButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         babyButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);

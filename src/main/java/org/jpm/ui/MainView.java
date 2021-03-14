@@ -360,6 +360,7 @@ public class MainView extends VerticalLayout {
         savingLayout.add(progressBar);
 
         savingLayout.setVisible(false);
+
         return savingLayout;
     }
 
@@ -501,7 +502,8 @@ public class MainView extends VerticalLayout {
 
         H2 title = new H2("Prep 6 Leavers Menu");
 
-        Label titleLabel = new Label("Thanks for logging into the leaver book site. This information will be used to make your son's profile in the leavers book. We are also doing a \"Guess the Baby\" section and as many other photo spreads as we can. Please upload any photos you have to give us a good selection to choose from for the book.\n\nPlease contact: " + AppConstants.SUPPORT_CONTACT + " if you have any issues");
+        Label titleLabel = new Label("Thanks for logging into the leaver book site. This information will be used to make your son's profile in the leavers book. We are also doing a \"Guess the Baby\" section and as many other photo spreads as we can. Please upload any photos you have to give us a good selection to choose from for the book.");
+        Label titleSubLabel = new Label("Please contact " + AppConstants.SUPPORT_CONTACT + " if you have any issues.");
 
         formButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         babyButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -518,8 +520,16 @@ public class MainView extends VerticalLayout {
 
         menuVerticalLayout.add(title);
         HorizontalLayout header = new HorizontalLayout();
-        header.add(titleLabel);
+        VerticalLayout vertHeader = new VerticalLayout();
+        vertHeader.setJustifyContentMode(JustifyContentMode.CENTER);
+        vertHeader.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+
+        vertHeader.add(titleLabel);
+        vertHeader.add(new Label(" "));
+        vertHeader.add(titleSubLabel);
+
         header.setMaxWidth(MAX_WIDTH);
+        header.add(vertHeader);
         menuVerticalLayout.add(header);
 
         menuVerticalLayout.add(new Label(" "));
@@ -546,7 +556,6 @@ public class MainView extends VerticalLayout {
         Text txt1 = new Text("Please answer the following questions, these are for you profile page in the leavers book");
 
         TextField fullnameField = new TextField("Full name");
-
         ComboBox<String> formComboBox = new ComboBox<>();
         formComboBox.setItems("Kells", "Derry", "Swords");
         formComboBox.setPlaceholder("Select your form");

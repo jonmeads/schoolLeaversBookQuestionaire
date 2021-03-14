@@ -44,10 +44,10 @@ public class AppConstants {
         return getProperty("DB", "192.168.8.250");
     }
     protected static String getDbUser() {
-        return getProperty("DB_USER", "");
+        return getProperty("DB_USER", "user");
     }
     protected static String getDbPass() {
-        return getProperty("DB_PASS", "");
+        return getProperty("DB_PASS", "password");
     }
 
     protected static String getPhotoOutputLocation() {

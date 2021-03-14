@@ -90,13 +90,19 @@ public class MainView extends VerticalLayout {
 
     private Leaver getSession() {
         Leaver leaver = null;
-        String session = RandomStringUtils.randomAlphanumeric(10);
+        String session;
+
         Cookie[] cookies = VaadinRequest.getCurrent().getCookies();
-        Optional<Cookie> cookie = Arrays.stream(cookies).filter(f -> COOKIE_SESSION.equals(f.getName())).findFirst();
-        if(cookie.isPresent() ) {
-            session = cookie.get().getValue();
-            leaver = jdbcLeaversDao.getLeaver(session);
-        } else {
+        if(cookies != null) {
+            Optional<Cookie> cookie = Arrays.stream(cookies).filter(f -> COOKIE_SESSION.equals(f.getName())).findFirst();
+            if (cookie.isPresent()) {
+                session = cookie.get().getValue();
+                leaver = jdbcLeaversDao.getLeaver(session);
+            }
+        }
+
+        if(leaver == null) {
+            session = RandomStringUtils.randomAlphanumeric(10);
             saveSession(session);
             leaver = new Leaver(session);
         }

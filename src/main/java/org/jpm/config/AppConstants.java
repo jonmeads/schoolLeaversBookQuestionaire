@@ -15,6 +15,8 @@ public class AppConstants {
     public static final String SUPPORT_CONTACT = getSupportContact();
 
     public static final String DB_NAME = getDb();
+    public static final String DB_USER = getDbUser();
+    public static final String DB_PASS = getDbPass();
 
 
     public static final Integer MAX_THREADS = 10;
@@ -40,6 +42,12 @@ public class AppConstants {
 
     protected static String getDb() {
         return getProperty("DB", "192.168.8.250");
+    }
+    protected static String getDbUser() {
+        return getProperty("DB_USER", "");
+    }
+    protected static String getDbPass() {
+        return getProperty("DB_PASS", "");
     }
 
     protected static String getPhotoOutputLocation() {

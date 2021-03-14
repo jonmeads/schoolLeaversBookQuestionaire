@@ -13,6 +13,6 @@ public class DriverConfig {
 
     @Bean
     public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection("jdbc:mysql://" +AppConstants.DB_NAME+"/leavers?user=user&password=password");
+        return DriverManager.getConnection("jdbc:mysql://" +AppConstants.DB_NAME+"/leavers?user=" +AppConstants.DB_USER+"&password=" +AppConstants.DB_PASS);
     }
 }

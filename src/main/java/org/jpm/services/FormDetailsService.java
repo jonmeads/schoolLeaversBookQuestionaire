@@ -3,6 +3,7 @@ package org.jpm.services;
 import org.jpm.config.AppConstants;
 import org.jpm.exceptions.ServiceException;
 import org.jpm.models.FormDetails;
+import org.jpm.models.Leaver;
 import org.jpm.services.dao.JdbcLeaversDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -25,18 +26,23 @@ public class FormDetailsService extends DetailsServiceAbstract implements Serial
     }
 
     @Async
-    public ListenableFuture<Void> store(FormDetails formDetails, String session) throws ServiceException {
+    public ListenableFuture<Void> store(FormDetails formDetails, Leaver leaver) throws ServiceException {
 
         LOGGER.info("Starting save of questionaire data");
         try {
-            String formOutputLocation = getSaveLocation(AppConstants.OUTPUT_LOCATION_FORM, session);
+            if(leaver.getName() == null) {
+                leaver.setName(formDetails.getFullname());
+            }
+
+            String formOutputLocation = getSaveLocation(AppConstants.OUTPUT_LOCATION_FORM, leaver.getSession());
 
             saveFormDataToLocation(formDetails.displayData(), "answersData", formOutputLocation);
             saveImageToLocation(formDetails.getStartPrepPicture(), "startPrep", formOutputLocation);
             saveImageToLocation(formDetails.getEndOfPrepPicture(), "endPrep", formOutputLocation);
             saveImageToLocation(formDetails.getHavingFunPicture(), "funPic", formOutputLocation);
 
-            jdbcLeaversDao.saveForm(session, formDetails.getFullname());
+            jdbcLeaversDao.saveForm(leaver.getSession(), formDetails.getFullname());
+            leaver.setForm(1);
 
         } catch (NoSuchFieldException | IllegalAccessException e) {
             LOGGER.severe("Failure saving questionaire data " + e);

@@ -9,6 +9,10 @@ public class Leaver {
     private Integer form;
     private Integer baby;
 
+    public Leaver(String session) {
+        this.session = session;
+    }
+
     public Leaver(String session, String name, Integer form, Integer baby) {
         this.session = session;
         this.name = name;

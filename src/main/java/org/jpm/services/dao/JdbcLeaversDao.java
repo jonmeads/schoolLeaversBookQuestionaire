@@ -79,6 +79,17 @@ public class JdbcLeaversDao {
     }
 
 
+    public Leaver getLeaver(String session) {
+        Leaver leaver = new Leaver(session);
+
+        List<Leaver> leavers = getLeavers(session);
+
+        if (leavers != null && !leavers.isEmpty()) {
+            leaver = leavers.get(0);
+        }
+        return leaver;
+    }
+
     protected boolean leaverExists(String session) {
         boolean result = false;
 
@@ -94,7 +105,7 @@ public class JdbcLeaversDao {
         List<Leaver> leavers = new ArrayList<>();
 
         try {
-            PreparedStatement statement = connection.prepareStatement("select session, name, form, baby from  leavers where session = ?");
+            PreparedStatement statement = connection.prepareStatement("select session, name, form, baby from leavers where session = ?");
             statement.setString(1, session);
             ResultSet rs = statement.executeQuery();
 

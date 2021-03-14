@@ -3,6 +3,7 @@ package org.jpm.services;
 import org.jpm.config.AppConstants;
 import org.jpm.exceptions.ServiceException;
 import org.jpm.models.BabyDetails;
+import org.jpm.models.Leaver;
 import org.jpm.services.dao.JdbcLeaversDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -26,16 +27,21 @@ public class BabyFormDetailsService extends DetailsServiceAbstract implements Se
     }
 
     @Async
-    public ListenableFuture<Void> store(BabyDetails babyDetails, String session) throws ServiceException {
+    public ListenableFuture<Void> store(BabyDetails babyDetails, Leaver leaver) throws ServiceException {
 
         LOGGER.info("Saving data");
 
-        String formOutputLocation = getSaveLocation(AppConstants.OUTPUT_LOCATION_BABY, session);
+        if(leaver.getName() == null) {
+            leaver.setName(babyDetails.getFullname());
+        }
+
+        String formOutputLocation = getSaveLocation(AppConstants.OUTPUT_LOCATION_BABY, leaver.getSession());
 
         saveFormDataToLocation(babyDetails.displayData(), "babyName", formOutputLocation);
         saveImageToLocation(babyDetails.getBabyPicture(), "babyPhoto", formOutputLocation);
 
-        jdbcLeaversDao.saveBaby(session, babyDetails.getFullname());
+        jdbcLeaversDao.saveBaby(leaver.getSession(), babyDetails.getFullname());
+        leaver.setBaby(1);
 
         return AsyncResult.forValue(null);
     }

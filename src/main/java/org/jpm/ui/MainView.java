@@ -10,6 +10,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.notification.Notification;
@@ -26,6 +27,8 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
+import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -34,13 +37,18 @@ import org.jpm.exceptions.ServiceException;
 import org.jpm.models.BabyDetails;
 import org.jpm.models.FormDetails;
 import org.jpm.models.FormQuestion;
+import org.jpm.models.Leaver;
 import org.jpm.services.BabyFormDetailsService;
 import org.jpm.services.FormDetailsService;
+import org.jpm.services.dao.JdbcLeaversDao;
 import org.jpm.ui.components.PictureField;
 import org.jpm.ui.data.MultiFileBufferToFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
+import javax.servlet.http.Cookie;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 
@@ -56,26 +64,58 @@ public class MainView extends VerticalLayout {
     private static final String MIN_WIDTH = "490px";
     private static final String MAX_WIDTH = "900px";
     private static final String MIN_BUTTON_WIDTH = "100px";
+    private static final String COOKIE_SESSION = "session_cookie";
+    private static final Integer COOKIE_AGE = 60 * 60 * 24 * 7 * 52; // 1 year
 
 
     private FormDetailsService formDetailsService;
     private BabyFormDetailsService babyFormDetailsService;
+    private JdbcLeaversDao jdbcLeaversDao;
     private BeanValidationBinder<FormDetails> formDetailsBeanValidationBinder;
     private BeanValidationBinder<BabyDetails> babyDetailsBeanValidationBinder;
-    private String session;
+    private Leaver leaver;
 
 
-    public MainView(@Autowired FormDetailsService formDetailsService, @Autowired BabyFormDetailsService babyFormDetailsService) {
+    public MainView(@Autowired FormDetailsService formDetailsService, @Autowired BabyFormDetailsService babyFormDetailsService, @Autowired JdbcLeaversDao jdbcLeaversDao) {
 
         this.formDetailsService = formDetailsService;
         this.babyFormDetailsService = babyFormDetailsService;
+        this.jdbcLeaversDao = jdbcLeaversDao;
         formDetailsBeanValidationBinder = new BeanValidationBinder<>(FormDetails.class);
         babyDetailsBeanValidationBinder = new BeanValidationBinder<>(BabyDetails.class);
-        this.session = RandomStringUtils.randomAlphanumeric(10);
+        this.leaver = getSession();
 
         constructUI();
     }
 
+    private Leaver getSession() {
+        Leaver leaver = null;
+        String session = RandomStringUtils.randomAlphanumeric(10);
+        Cookie[] cookies = VaadinRequest.getCurrent().getCookies();
+        Optional<Cookie> cookie = Arrays.stream(cookies).filter(f -> COOKIE_SESSION.equals(f.getName())).findFirst();
+        if(cookie.isPresent() ) {
+            session = cookie.get().getValue();
+            leaver = jdbcLeaversDao.getLeaver(session);
+        } else {
+            saveSession(session);
+            leaver = new Leaver(session);
+        }
+        return leaver;
+    }
+
+    private void saveSession(String session) {
+        Cookie cookie = new Cookie(COOKIE_SESSION, session);
+        cookie.setMaxAge(COOKIE_AGE);
+        cookie.setPath("/");
+        VaadinService.getCurrentResponse().addCookie(cookie);
+    }
+
+    private void setCompletedStatusForButton(Button button, Integer value) {
+        if (value != null && value > 0) {
+            button.setIcon(VaadinIcon.THUMBS_UP.create());
+            button.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        }
+    }
 
     protected void constructUI() {
 
@@ -101,6 +141,9 @@ public class MainView extends VerticalLayout {
         Button photosButton = new Button("Upload Additional Photos for the Book");
         Button quitButton = new Button("Finished");
         VerticalLayout menuLayout = createMenu(formButton,babyButton, photosButton, quitButton);
+        setCompletedStatusForButton(formButton, leaver.getForm());
+        setCompletedStatusForButton(babyButton, leaver.getBaby());
+
 
         // baby
         Button babySaveButton = new Button("Save");
@@ -202,7 +245,7 @@ public class MainView extends VerticalLayout {
                 babyDetailsBeanValidationBinder.writeBean(detailsBean);
 
                 babyFormDetailsService
-                    .store(detailsBean, session)
+                    .store(detailsBean, leaver)
                     .addCallback(new ListenableFutureCallback<>() {
 
                     @Override
@@ -211,6 +254,7 @@ public class MainView extends VerticalLayout {
                             () -> {
                                 saveFormLayout.setVisible(false);
                                 menuLayout.setVisible(true);
+                                setCompletedStatusForButton(babyButton, 1);
                                 LOGGER.info("Baby photo data successfully saved ");
                                 showSuccess("Baby photo data successfully saved");
                             }
@@ -251,13 +295,14 @@ public class MainView extends VerticalLayout {
             try {
                 FormDetails detailsBean = new FormDetails();
                 formDetailsBeanValidationBinder.writeBean(detailsBean);
-                formDetailsService.store(detailsBean, session).addCallback(new ListenableFutureCallback<>() {
+                formDetailsService.store(detailsBean, leaver).addCallback(new ListenableFutureCallback<>() {
 
                             @Override
                             public void onSuccess(Void unused) {
                                 ui.access(() -> {
                                             saveFormLayout.setVisible(false);
                                             menuLayout.setVisible(true);
+                                            setCompletedStatusForButton(formButton, 1);
                                             LOGGER.info("Successfully saved the questionaire data");
                                             showSuccess(detailsBean);
                                         }

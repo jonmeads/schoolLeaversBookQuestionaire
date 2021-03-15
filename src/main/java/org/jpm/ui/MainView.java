@@ -92,6 +92,11 @@ public class MainView extends VerticalLayout {
         Leaver leaver = null;
         String session;
 
+        VaadinRequest request = VaadinRequest.getCurrent();
+        if(request != null){
+            LOGGER.info("Connection details: host: " + request.getRemoteHost() + ", addr: " + request.getRemoteAddr() + ", user: " + request.getRemoteUser());
+        }
+
         Cookie[] cookies = VaadinRequest.getCurrent().getCookies();
         if(cookies != null) {
             Optional<Cookie> cookie = Arrays.stream(cookies).filter(f -> COOKIE_SESSION.equals(f.getName())).findFirst();
@@ -169,7 +174,7 @@ public class MainView extends VerticalLayout {
         LoginOverlay loginComponent = getLoginOverlay();
         loginComponent.addLoginListener(e -> {
             if(AppConstants.AUTH_PASS.equals(e.getPassword()) && AppConstants.AUTH_USER.equals(e.getUsername())) {
-                LOGGER.info("Successful login");
+                LOGGER.info("Successful login " + leaver);
                 loginComponent.close();
                 menuLayout.setVisible(true);
             } else {
@@ -205,19 +210,19 @@ public class MainView extends VerticalLayout {
 
         // listeners
         formButton.addClickListener(e -> {
-            LOGGER.info("Opening Questionaire");
+            LOGGER.info("Opening Questionaire " + leaver);
             menuLayout.setVisible(false);
             formLayout.setVisible(true);
         });
 
         babyButton.addClickListener(e -> {
-            LOGGER.info("Opening Baby form");
+            LOGGER.info("Opening Baby form "  + leaver);
             menuLayout.setVisible(false);
             babyLayout.setVisible(true);
         });
 
         photosButton.addClickListener(e -> {
-            LOGGER.info("Opening Photos");
+            LOGGER.info("Opening Photos "  + leaver);
             menuLayout.setVisible(false);
             photoLayout.setVisible(true);
         });
@@ -240,7 +245,7 @@ public class MainView extends VerticalLayout {
         });
 
         babySaveButton.addClickListener(e -> {
-            LOGGER.info("Saving Baby Form Data");
+            LOGGER.info("Saving Baby Form Data "  + leaver);
             babyLayout.setVisible(false);
             saveFormLayout.setVisible(true);
             UI ui = UI.getCurrent();
@@ -261,7 +266,7 @@ public class MainView extends VerticalLayout {
                                 saveFormLayout.setVisible(false);
                                 menuLayout.setVisible(true);
                                 setCompletedStatusForButton(babyButton, 1);
-                                LOGGER.info("Baby photo data successfully saved ");
+                                LOGGER.info("Baby photo data successfully saved  "  + leaver);
                                 showSuccess("Baby photo data successfully saved");
                             }
                         );
@@ -282,7 +287,7 @@ public class MainView extends VerticalLayout {
             } catch (ValidationException formException) {
                 saveFormLayout.setVisible(false);
                 babyLayout.setVisible(true);
-                LOGGER.warning("Baby form validation error");
+                LOGGER.warning("Baby form validation error "  + leaver);
                 showValidationError("Please confirm all required fields have been completed including uploading the pictures.");
             } catch (ServiceException se) {
                 saveFormLayout.setVisible(false);
@@ -293,7 +298,7 @@ public class MainView extends VerticalLayout {
         });
 
         formSubmitButton.addClickListener(e -> {
-            LOGGER.info("Saving the questionaire data");
+            LOGGER.info("Saving the questionaire data "  + leaver);
             UI ui = UI.getCurrent();
             formLayout.setVisible(false);
             saveFormLayout.setVisible(true);
@@ -309,7 +314,7 @@ public class MainView extends VerticalLayout {
                                             saveFormLayout.setVisible(false);
                                             menuLayout.setVisible(true);
                                             setCompletedStatusForButton(formButton, 1);
-                                            LOGGER.info("Successfully saved the questionaire data");
+                                            LOGGER.info("Successfully saved the questionaire data "  + leaver);
                                             showSuccess(detailsBean);
                                         }
                                 );
@@ -330,7 +335,7 @@ public class MainView extends VerticalLayout {
             } catch (ValidationException formException) {
                 saveFormLayout.setVisible(false);
                 formLayout.setVisible(true);
-                LOGGER.warning("Validation failure for questionaire data");
+                LOGGER.warning("Validation failure for questionaire data "  + leaver);
                 showValidationError("Please confirm all required fields have been completed including uploading the pictures.");
             } catch (ServiceException se) {
                 saveFormLayout.setVisible(false);

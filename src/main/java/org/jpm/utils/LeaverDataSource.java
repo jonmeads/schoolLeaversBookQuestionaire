@@ -6,8 +6,11 @@ import org.jpm.config.AppConstants;
 import java.beans.PropertyVetoException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 public class LeaverDataSource {
+
+    private final static Logger LOGGER = Logger.getLogger(LeaverDataSource.class.getName());
 
     private static LeaverDataSource datasource;
     private ComboPooledDataSource cpds;
@@ -19,10 +22,13 @@ public class LeaverDataSource {
         cpds.setUser(AppConstants.DB_USER);
         cpds.setPassword(AppConstants.DB_PASS);
 
+        cpds.setAcquireRetryAttempts(100);
         cpds.setMinPoolSize(4);
         cpds.setAcquireIncrement(2);
         cpds.setMaxPoolSize(10);
         cpds.setMaxStatements(200);
+        cpds.setIdleConnectionTestPeriod(30);
+        cpds.setTestConnectionOnCheckin(true);
 
     }
 
@@ -36,7 +42,13 @@ public class LeaverDataSource {
     }
 
     public Connection getConnection() throws SQLException {
-        return this.cpds.getConnection();
+        Connection conn = this.cpds.getConnection();
+        if(conn.isClosed()) {
+            LOGGER.severe("bad connection, resetting pool");
+            cpds.softResetAllUsers();
+            conn = this.cpds.getConnection();
+        }
+        return conn;
     }
 
 }

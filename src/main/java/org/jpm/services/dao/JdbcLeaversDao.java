@@ -22,16 +22,17 @@ public class JdbcLeaversDao {
     public JdbcLeaversDao() {
     }
 
-    protected Connection getConnection() throws PropertyVetoException, SQLException {
-        return LeaverDataSource.getInstance().getConnection();
-    }
+
 
     public void saveForm(String session, String name) {
         saveSession(session, name);
         try {
             LOGGER.info("Saving form information for session id: "+ session +", and name: " + name);
 
-            PreparedStatement statement = getConnection().prepareStatement("update leavers set form  = ? where session = ?");
+            Connection conn = LeaverDataSource.getInstance().getConnection();
+
+
+            PreparedStatement statement = conn.prepareStatement("update leavers set form  = ? where session = ?");
             statement.setInt(1, 1);
             statement.setString(2, session);
 
@@ -48,8 +49,8 @@ public class JdbcLeaversDao {
         saveSession(session, name);
         try {
             LOGGER.info("Saving baby information for session id: "+ session +", and name: " + name);
-
-            PreparedStatement statement = getConnection().prepareStatement("update leavers set baby = ? where session = ?");
+            Connection conn = LeaverDataSource.getInstance().getConnection();
+            PreparedStatement statement = conn.prepareStatement("update leavers set baby = ? where session = ?");
             statement.setInt(1, 1);
             statement.setString(2, session);
 
@@ -67,7 +68,8 @@ public class JdbcLeaversDao {
         if(!leaverExists(session)) {
             LOGGER.info("Creation session information for session id: "+ session +", and name: " + name);
             try {
-                PreparedStatement statement = getConnection().prepareStatement("insert into leavers (session, name) select ?,?");
+                Connection conn = LeaverDataSource.getInstance().getConnection();
+                PreparedStatement statement = conn.prepareStatement("insert into leavers (session, name) select ?,?");
                 statement.setString(1, session);
                 statement.setString(2, name);
 
@@ -109,7 +111,8 @@ public class JdbcLeaversDao {
         List<Leaver> leavers = new ArrayList<>();
 
         try {
-            PreparedStatement statement = getConnection().prepareStatement("select session, name, form, baby from leavers where session = ?");
+            Connection conn = LeaverDataSource.getInstance().getConnection();
+            PreparedStatement statement = conn.prepareStatement("select session, name, form, baby from leavers where session = ?");
             statement.setString(1, session);
             ResultSet rs = statement.executeQuery();
 

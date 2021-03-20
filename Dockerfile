@@ -30,4 +30,4 @@ RUN useradd -m myuser
 USER myuser
 EXPOSE 8080
 VOLUME /data
-CMD java -jar /usr/app/app.jar
+CMD java -Xms2G -Xmx4G -jar /usr/app/app.jar

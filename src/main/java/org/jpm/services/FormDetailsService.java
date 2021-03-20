@@ -44,7 +44,7 @@ public class FormDetailsService extends DetailsServiceAbstract implements Serial
             jdbcLeaversDao.saveForm(leaver.getSession(), formDetails.getFullname());
             leaver.setForm(1);
 
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        } catch (Exception e) {
             LOGGER.severe("Failure saving questionaire data " + e);
             throw new ServiceException("Failed to parse form data to file" + e.toString());
         }

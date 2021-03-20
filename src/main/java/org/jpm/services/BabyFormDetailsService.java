@@ -29,19 +29,23 @@ public class BabyFormDetailsService extends DetailsServiceAbstract implements Se
     @Async
     public ListenableFuture<Void> store(BabyDetails babyDetails, Leaver leaver) throws ServiceException {
 
-        LOGGER.info("Saving data");
+        try {
+            LOGGER.info("Saving data");
 
-        if(leaver.getName() == null) {
-            leaver.setName(babyDetails.getFullname());
+            if (leaver.getName() == null) {
+                leaver.setName(babyDetails.getFullname());
+            }
+
+            String formOutputLocation = getSaveLocation(AppConstants.OUTPUT_LOCATION_BABY, leaver.getSession());
+
+            saveFormDataToLocation(babyDetails.displayData(), "babyName", formOutputLocation);
+            saveImageToLocation(babyDetails.getBabyPicture(), "babyPhoto", formOutputLocation);
+
+            jdbcLeaversDao.saveBaby(leaver.getSession(), babyDetails.getFullname());
+            leaver.setBaby(1);
+        } catch (Exception e) {
+            LOGGER.severe("failed" + e);
         }
-
-        String formOutputLocation = getSaveLocation(AppConstants.OUTPUT_LOCATION_BABY, leaver.getSession());
-
-        saveFormDataToLocation(babyDetails.displayData(), "babyName", formOutputLocation);
-        saveImageToLocation(babyDetails.getBabyPicture(), "babyPhoto", formOutputLocation);
-
-        jdbcLeaversDao.saveBaby(leaver.getSession(), babyDetails.getFullname());
-        leaver.setBaby(1);
 
         return AsyncResult.forValue(null);
     }

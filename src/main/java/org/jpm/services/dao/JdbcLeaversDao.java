@@ -26,13 +26,13 @@ public class JdbcLeaversDao {
 
     public void saveForm(String session, String name) {
         saveSession(session, name);
+        Connection conn = null;
+        PreparedStatement statement = null;
         try {
             LOGGER.info("Saving form information for session id: "+ session +", and name: " + name);
 
-            Connection conn = LeaverDataSource.getInstance().getConnection();
-
-
-            PreparedStatement statement = conn.prepareStatement("update leavers set form  = ? where session = ?");
+            conn = LeaverDataSource.getInstance().getConnection();
+            statement = conn.prepareStatement("update leavers set form  = ? where session = ?");
             statement.setInt(1, 1);
             statement.setString(2, session);
 
@@ -42,15 +42,29 @@ public class JdbcLeaversDao {
             }
         } catch (SQLException | PropertyVetoException e) {
             LOGGER.severe("Failed to save form session information " + e);
+        } finally {
+
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException e) {  }
+            }
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {  }
+            }
         }
     }
 
     public void saveBaby(String session, String name) {
         saveSession(session, name);
+        Connection conn = null;
+        PreparedStatement statement = null;
         try {
             LOGGER.info("Saving baby information for session id: "+ session +", and name: " + name);
-            Connection conn = LeaverDataSource.getInstance().getConnection();
-            PreparedStatement statement = conn.prepareStatement("update leavers set baby = ? where session = ?");
+            conn = LeaverDataSource.getInstance().getConnection();
+            statement = conn.prepareStatement("update leavers set baby = ? where session = ?");
             statement.setInt(1, 1);
             statement.setString(2, session);
 
@@ -60,16 +74,32 @@ public class JdbcLeaversDao {
             }
         } catch (SQLException | PropertyVetoException e) {
             LOGGER.severe("Failed to save baby session information " + e);
+        } finally {
+
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException e) {  }
+            }
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {  }
+            }
         }
     }
 
     protected void saveSession(String session, String name) {
 
         if(!leaverExists(session)) {
+
+            Connection conn = null;
+            PreparedStatement statement = null;
+
             LOGGER.info("Creation session information for session id: "+ session +", and name: " + name);
             try {
-                Connection conn = LeaverDataSource.getInstance().getConnection();
-                PreparedStatement statement = conn.prepareStatement("insert into leavers (session, name) select ?,?");
+                conn = LeaverDataSource.getInstance().getConnection();
+                statement = conn.prepareStatement("insert into leavers (session, name) select ?,?");
                 statement.setString(1, session);
                 statement.setString(2, name);
 
@@ -80,6 +110,18 @@ public class JdbcLeaversDao {
 
             } catch (SQLException | PropertyVetoException e) {
                 LOGGER.severe("Failed to save session information " + e);
+            } finally {
+
+                if (statement != null) {
+                    try {
+                        statement.close();
+                    } catch (SQLException e) {  }
+                }
+                if (conn != null) {
+                    try {
+                        conn.close();
+                    } catch (SQLException e) {  }
+                }
             }
         }
     }
@@ -109,12 +151,14 @@ public class JdbcLeaversDao {
 
     protected List<Leaver> getLeavers(String session) {
         List<Leaver> leavers = new ArrayList<>();
-
+        Connection conn = null;
+        PreparedStatement statement = null;
+        ResultSet rs = null;
         try {
-            Connection conn = LeaverDataSource.getInstance().getConnection();
-            PreparedStatement statement = conn.prepareStatement("select session, name, form, baby from leavers where session = ?");
+            conn = LeaverDataSource.getInstance().getConnection();
+            statement = conn.prepareStatement("select session, name, form, baby from leavers where session = ?");
             statement.setString(1, session);
-            ResultSet rs = statement.executeQuery();
+            rs = statement.executeQuery();
 
             while (rs.next()) {
                 String sess = rs.getString("session");
@@ -129,7 +173,24 @@ public class JdbcLeaversDao {
 
         } catch (SQLException | PropertyVetoException e) {
             LOGGER.severe("Failed to save session information " + e);
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {  }
+            }
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException e) {  }
+            }
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {  }
+            }
         }
+
         return leavers;
     }
 

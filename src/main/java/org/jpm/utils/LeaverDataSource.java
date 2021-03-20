@@ -23,9 +23,9 @@ public class LeaverDataSource {
         cpds.setPassword(AppConstants.DB_PASS);
 
         cpds.setAcquireRetryAttempts(100);
-        cpds.setMinPoolSize(4);
-        cpds.setAcquireIncrement(2);
-        cpds.setMaxPoolSize(10);
+        cpds.setMinPoolSize(20);
+        cpds.setAcquireIncrement(5);
+        cpds.setMaxPoolSize(100);
         cpds.setMaxStatements(200);
         cpds.setIdleConnectionTestPeriod(30);
         cpds.setTestConnectionOnCheckin(true);
@@ -42,6 +42,7 @@ public class LeaverDataSource {
     }
 
     public Connection getConnection() throws SQLException {
+
         Connection conn = this.cpds.getConnection();
         if(conn.isClosed()) {
             LOGGER.severe("bad connection, resetting pool");

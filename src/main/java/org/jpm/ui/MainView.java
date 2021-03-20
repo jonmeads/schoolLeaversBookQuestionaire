@@ -33,7 +33,6 @@ import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jpm.config.AppConstants;
-import org.jpm.exceptions.ServiceException;
 import org.jpm.models.BabyDetails;
 import org.jpm.models.FormDetails;
 import org.jpm.models.FormQuestion;
@@ -289,7 +288,7 @@ public class MainView extends VerticalLayout {
                 babyLayout.setVisible(true);
                 LOGGER.warning("Baby form validation error "  + leaver);
                 showValidationError("Please confirm all required fields have been completed including uploading the pictures.");
-            } catch (ServiceException se) {
+            } catch (Exception se) {
                 saveFormLayout.setVisible(false);
                 babyLayout.setVisible(true);
                 LOGGER.warning("Failed to save the baby photo data" + se);
@@ -337,7 +336,7 @@ public class MainView extends VerticalLayout {
                 formLayout.setVisible(true);
                 LOGGER.warning("Validation failure for questionaire data "  + leaver);
                 showValidationError("Please confirm all required fields have been completed including uploading the pictures.");
-            } catch (ServiceException se) {
+            } catch (Exception se) {
                 saveFormLayout.setVisible(false);
                 formLayout.setVisible(true);
                 LOGGER.warning("Failed to save the questionaire data" + se);

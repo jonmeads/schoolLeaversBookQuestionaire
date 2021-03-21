@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import java.io.Serializable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 @Service
@@ -29,6 +31,8 @@ public class BabyFormDetailsService extends DetailsServiceAbstract implements Se
     @Async
     public ListenableFuture<Void> store(BabyDetails babyDetails, Leaver leaver) throws ServiceException {
 
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
         try {
             LOGGER.info("Saving data");
 
@@ -41,7 +45,9 @@ public class BabyFormDetailsService extends DetailsServiceAbstract implements Se
             saveFormDataToLocation(babyDetails.displayData(), "babyName", formOutputLocation);
             saveImageToLocation(babyDetails.getBabyPicture(), "babyPhoto", formOutputLocation);
 
-            jdbcLeaversDao.saveBaby(leaver.getSession(), babyDetails.getFullname());
+            // save to db in background
+            executorService.execute(() -> jdbcLeaversDao.saveBaby(leaver.getSession(), babyDetails.getFullname()));
+
             leaver.setBaby(1);
         } catch (Exception e) {
             LOGGER.severe("failed" + e);

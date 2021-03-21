@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import java.io.Serializable;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 
 @Service
@@ -28,6 +29,8 @@ public class FormDetailsService extends DetailsServiceAbstract implements Serial
     @Async
     public ListenableFuture<Void> store(FormDetails formDetails, Leaver leaver) throws ServiceException {
 
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
         LOGGER.info("Starting save of questionaire data");
         try {
             if(leaver.getName() == null) {
@@ -41,7 +44,9 @@ public class FormDetailsService extends DetailsServiceAbstract implements Serial
             saveImageToLocation(formDetails.getEndOfPrepPicture(), "endPrep", formOutputLocation);
             saveImageToLocation(formDetails.getHavingFunPicture(), "funPic", formOutputLocation);
 
-            jdbcLeaversDao.saveForm(leaver.getSession(), formDetails.getFullname());
+            // save to db in background
+            executorService.execute(() -> jdbcLeaversDao.saveForm(leaver.getSession(), formDetails.getFullname()));
+
             leaver.setForm(1);
 
         } catch (Exception e) {

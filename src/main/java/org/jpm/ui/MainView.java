@@ -91,11 +91,6 @@ public class MainView extends VerticalLayout {
         Leaver leaver = null;
         String session;
 
-        VaadinRequest request = VaadinRequest.getCurrent();
-        if(request != null){
-            LOGGER.info("Connection details: host: " + request.getRemoteHost() + ", addr: " + request.getRemoteAddr() + ", user: " + request.getRemoteUser());
-        }
-
         Cookie[] cookies = VaadinRequest.getCurrent().getCookies();
         if(cookies != null) {
             Optional<Cookie> cookie = Arrays.stream(cookies).filter(f -> COOKIE_SESSION.equals(f.getName())).findFirst();

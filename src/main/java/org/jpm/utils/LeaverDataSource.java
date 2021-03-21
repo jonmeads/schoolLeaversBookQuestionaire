@@ -44,6 +44,9 @@ public class LeaverDataSource {
     public Connection getConnection() throws SQLException {
 
         Connection conn = this.cpds.getConnection();
+
+        LOGGER.info("Connections, num: " + this.cpds.getNumConnections() +", busy: " + this.cpds.getNumBusyConnections() + ", idle: " + this.cpds.getNumIdleConnections() + ", unclosed: " + this.cpds.getNumUnclosedOrphanedConnections());
+
         if(conn.isClosed()) {
             LOGGER.severe("bad connection, resetting pool");
             cpds.softResetAllUsers();

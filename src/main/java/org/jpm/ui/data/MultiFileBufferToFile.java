@@ -4,6 +4,7 @@ import com.google.common.io.Files;
 import com.vaadin.flow.component.upload.MultiFileReceiver;
 import com.vaadin.flow.component.upload.receivers.FileData;
 import org.jpm.config.AppConstants;
+import org.jpm.models.Leaver;
 import org.jpm.utils.FileUtils;
 
 import java.io.File;
@@ -13,12 +14,17 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class MultiFileBufferToFile implements MultiFileReceiver {
 
-    private Map<String, FileData> files = new HashMap();
+    private final static Logger LOGGER = Logger.getLogger(MultiFileBufferToFile.class.getName());
 
-    public MultiFileBufferToFile() {
+    private Map<String, FileData> files = new HashMap();
+    private Leaver leaver;
+
+    public MultiFileBufferToFile(Leaver leaver) {
+        this.leaver = leaver;
     }
 
     @Override
@@ -49,12 +55,18 @@ public class MultiFileBufferToFile implements MultiFileReceiver {
             String ext = Files.getFileExtension(fileName);
             ext = ext != null ? ".".concat(ext) : null;
 
+            String session = leaver != null && leaver.getSession() != null ? leaver.getSession() : "unknown";
 
-            File dir = new File(AppConstants.OUTPUT_LOCATION_PHOTOS);
+
+            String dirString = AppConstants.OUTPUT_LOCATION_PHOTOS + File.separatorChar + session;
+
+            File dir = new File(dirString);
             FileUtils.createDirectory(dir);
 
             File fileToSave = File.createTempFile("PhotoUpload", ext, dir);
             newFilename = fileToSave.toString();
+
+            LOGGER.info("Creating photo for leaver: " + leaver + " and file: " + newFilename);
 
             return new FileOutputStream(fileToSave);
         } catch (IOException e) {

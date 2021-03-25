@@ -88,27 +88,34 @@ public class MainView extends VerticalLayout {
     }
 
     private Leaver getSession() {
-        Leaver leaver = null;
+        Leaver leaverSession = null;
         String session;
 
         Cookie[] cookies = VaadinRequest.getCurrent().getCookies();
         if(cookies != null) {
-            Optional<Cookie> cookie = Arrays.stream(cookies).filter(f -> COOKIE_SESSION.equals(f.getName())).findFirst();
+
+            Optional<Cookie> cookie = Arrays.stream(cookies)
+                    .filter(f -> COOKIE_SESSION.equals(f.getName()))
+                    .findFirst();
+
             if (cookie.isPresent()) {
                 session = cookie.get().getValue();
-                leaver = jdbcLeaversDao.getLeaver(session);
+                leaverSession = jdbcLeaversDao.getLeaver(session);
+            }
+
+            if(leaverSession == null) {
+                session = RandomStringUtils.randomAlphanumeric(10);
+                this.leaver = new Leaver(session);
             }
         }
-
-        if(leaver == null) {
-            session = RandomStringUtils.randomAlphanumeric(10);
-            saveSession(session);
-            leaver = new Leaver(session);
-        }
-        return leaver;
+        return leaverSession;
     }
 
+
     private void saveSession(String session) {
+        if(session == null || session.isEmpty()) {
+            session = RandomStringUtils.randomAlphanumeric(10);
+        }
         Cookie cookie = new Cookie(COOKIE_SESSION, session);
         cookie.setMaxAge(COOKIE_AGE);
         cookie.setPath("/");
@@ -168,6 +175,7 @@ public class MainView extends VerticalLayout {
         LoginOverlay loginComponent = getLoginOverlay();
         loginComponent.addLoginListener(e -> {
             if(AppConstants.AUTH_PASS.equals(e.getPassword()) && AppConstants.AUTH_USER.equals(e.getUsername())) {
+                saveSession(leaver.getSession());
                 LOGGER.info("Successful login " + leaver);
                 loginComponent.close();
                 menuLayout.setVisible(true);
@@ -224,16 +232,19 @@ public class MainView extends VerticalLayout {
         quitButton.addClickListener(e -> done());
 
         babyCancel.addClickListener(e -> {
+            LOGGER.info("Cancel baby "  + leaver);
             babyLayout.setVisible(false);
             menuLayout.setVisible(true);
         });
 
         photoCancel.addClickListener(e -> {
+            LOGGER.info("Cancel photo "  + leaver);
             photoLayout.setVisible(false);
             menuLayout.setVisible(true);
         });
 
         formCancel.addClickListener(e -> {
+            LOGGER.info("Cancel form "  + leaver);
             formLayout.setVisible(false);
             menuLayout.setVisible(true);
         });
@@ -421,7 +432,7 @@ public class MainView extends VerticalLayout {
         H2 title = new H2("Upload Photos");
 
         verticalLayout.add(title);
-        Label titleLabel = new Label("Please upload additional photos that we can add to the leavers book, multiple photos can be uploaded either via the upload button or by dragging the photos onto the page. Photos are limited to a maximum size of 10MB");
+        Label titleLabel = new Label("Please upload additional photos that we can add to the leavers book, multiple photos can be uploaded either via the upload button or by dragging the photos onto the page, these will automatically be uploaded, no need to save. Photos are limited to a maximum size of 10MB");
 
         HorizontalLayout header = new HorizontalLayout();
         header.add(titleLabel);
@@ -429,7 +440,7 @@ public class MainView extends VerticalLayout {
         verticalLayout.add(header);
 
 
-        MultiFileBufferToFile buffer = new MultiFileBufferToFile();
+        MultiFileBufferToFile buffer = new MultiFileBufferToFile(leaver);
         Upload upload = new Upload(buffer);
 
         Div output = new Div();

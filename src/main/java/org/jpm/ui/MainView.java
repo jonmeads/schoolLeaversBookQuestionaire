@@ -105,7 +105,7 @@ public class MainView extends VerticalLayout {
 
             if(leaverSession == null) {
                 session = RandomStringUtils.randomAlphanumeric(10);
-                this.leaver = new Leaver(session);
+                leaverSession = new Leaver(session);
             }
         }
         return leaverSession;
